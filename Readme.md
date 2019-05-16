@@ -39,6 +39,7 @@ vim /etc/rsyslog.d/10-iptables.conf
 ```
 
 > :msg,contains,"] TRUST: " /var/log/iptables.log
+>
 > :msg,contains,"] THREAT: " /var/log/iptables.log
 >
 > & ~
