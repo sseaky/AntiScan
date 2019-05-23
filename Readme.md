@@ -24,10 +24,10 @@ ipset add TRUST x.x.x.x
 
 ```bash
 iptables -A INPUT -m state --state RELATED,ESTABLISHED -j ACCEPT
-iptables -A INPUT -m set --match-set TRUST src -j ACCEPT -m comment --comment 'ACCEPT TRUST LIST'
-iptables -A INPUT -p icmp -m length --length 128 -j LOG --log-prefix "TRUST: " -m comment --comment 'MARK TRUST' 
-iptables -A INPUT -m set --match-set THREAT src -j DROP -m comment --comment 'DROP THREAT LIST' 
-iptables -A INPUT -p tcp -m multiport --dports 21,22,23,53,69,80,110,123,443,1080,3128,3306,3389,6379,8080 -j LOG --log-prefix "THREAT: " -m comment --comment 'MARK THREAT'
+iptables -A INPUT -m set --match-set TRUST src -m comment --comment "ACCEPT TRUST LIST" -j ACCEPT
+iptables -A INPUT -p icmp -m length --length 128 -m comment --comment "MARK TRUST" -j LOG --log-prefix "TRUST: "
+iptables -A INPUT -m set --match-set THREAT src -m comment --comment "DROP THREAT LIST" -j DROP
+iptables -A INPUT -p tcp -m multiport --dports 21,22,23,53,69,80,110,123,443,1080,3128,3306,3389,6379,8080 -m comment --comment "MARK THREAT" -j LOG --log-prefix "THREAT: "
 ```
 
 - ### Redirect log
@@ -50,8 +50,10 @@ vim /etc/rsyslog.d/10-iptables.conf
 
 - ### Initiate
 
+  install [ipip-ipdb](https://github.com/ipipdotnet/ipdb-python.git) for location
+
 ```bash
-pip3 install ipdb
+pip3 install ipip-ipdb
 ./punisher.py --init
 ```
 
