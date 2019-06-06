@@ -24,8 +24,8 @@ IPSET_TRUST, IPSET_THREAT = 'TRUST', 'THREAT'
 ARGS = {}
 CACHE = {}
 LOG_FILE = '/var/log/iptables.log'
-PATTERN_TRUST = '(?P<last_seen>[A-Z][a-z]+ \d+ [\d:]+).+TRUST: .+SRC=(?P<src>[\S]+) DST.* LEN=128 .* PROTO=(?P<proto>[\S]+)'
-PATTERN_THREAT = '(?P<last_seen>[A-Z][a-z]+ \d+ [\d:]+).+THREAT: .+SRC=(?P<src>[\S]+) DST.*PROTO=(?P<proto>[\S]+) SPT=(?P<spt>[\S]+) DPT=(?P<dpt>[\S]+)'
+PATTERN_TRUST = '(?P<last_seen>[A-Z][a-z]+ +\d+ +[\d:]+).+TRUST: .+SRC=(?P<src>[\S]+) DST.* LEN=128 .* PROTO=(?P<proto>[\S]+)'
+PATTERN_THREAT = '(?P<last_seen>[A-Z][a-z]+ +\d+ +[\d:]+).+THREAT: .+SRC=(?P<src>[\S]+) DST.*PROTO=(?P<proto>[\S]+) SPT=(?P<spt>[\S]+) DPT=(?P<dpt>[\S]+)'
 CP_FILE = 'history.cp'
 
 
