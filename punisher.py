@@ -88,7 +88,7 @@ def shell(cmd):
                              stdout=subprocess.PIPE,
                              stdin=subprocess.PIPE,
                              stderr=subprocess.PIPE)
-    child.wait()
+    # child.wait()
     return [x.decode('utf-8') if isinstance(x, bytes) else x for x in (*child.communicate(), child.returncode)]
 
 
