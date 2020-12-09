@@ -346,6 +346,11 @@ EOF
 }
 
 set_incron(){
+    INCRON_ALLOW="/etc/incron.allow"
+    if [ -f "$INCRON_ALLOW" ]; then
+        `grep -q "^root" $INCRON_ALLOW` || (echo root >> $INCRON_ALLOW)
+    fi
+
     create_parent ${INCRON_TABLE}
     quite_exec grep "${LOG_FILE}" ${INCRON_TABLE}
     if [ $? -ne 0 ]
