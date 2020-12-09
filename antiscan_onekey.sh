@@ -29,7 +29,7 @@ RSYSLOG_CONFIG_DIR="/etc/rsyslog.d"
 LOGROTATE_CONFIG_DIR="/etc/logrotate.d"
 INCRON_TABLE="/var/spool/incron/root"
 
-DOG_URL="https://github.com/sseaky/AntiScan/raw/master/antiscan_dog.py"
+DOG_URL="https://github.com/sseaky/AntiScan/raw/master/antiscan_dog.sh"
 DOG_PATH="/usr/bin/${PROJECT_NAME}_dog.sh"
 LOCK_PATH=${PROJECT_DIR}/${PROJECT_NAME}.lock
 
@@ -268,8 +268,12 @@ prompt_param(){
     func_input_param -v TRUST_ICMP_LENGTH -a "magic length of icmp" -d $TRUST_ICMP_LENGTH
     func_input_param -v TRUST_NETWORK -d $TRUST_NETWORK -a "permanent trust network"
 
-    func_input_param -v CURRENT_SSH_IP -d `echo $SSH_CLIENT | awk '{print $1}'` -a "current login source ip"
-
+    if [ -n "$SSH_CLIENT" ]; then
+        CURRENT_SSH_IP=`echo $SSH_CLIENT | awk '{print $1}'`
+        func_input_param -v CURRENT_SSH_IP -a "current login source ip" -n -d $CURRENT_SSH_IP
+    else
+        func_input_param -v CURRENT_SSH_IP -a "current login source ip" -n
+    fi
 
     [ -s "$IPSET_SAVE_FILE" ] && func_input_param -v flag_ipset_restore -y -a "$TRUST_FILE is exist" -q "Restore it?"
 
@@ -368,8 +372,9 @@ EOF
 }
 
 install_dog(){
+    show_process Install `basename $DOG_PATH`
 #    cp ${PROJECT_NAME}_dog.sh $DOG_PATH
-    wget -O $DOG_PATH $DOG_URL
+    wget -qO $DOG_PATH $DOG_URL
     chmod +x $DOG_PATH
 }
 
@@ -378,6 +383,20 @@ show_result(){
     ipset list -n | xargs echo ipset rules
     echo
     iptables -nvL
+}
+
+show_tip(){
+    echo
+    echo "Tips:"
+    echo "  Comment/uncomment the item in root's incrontab to disable/enable the trigger:"
+    echo "    sudo incrontab -e"
+    echo
+    echo "  Alter iptables to customize sensible ports "
+    echo "    sudo iptables -nvL --line-number "
+    echo
+    echo "  Alter ipset to customize trust/threat list "
+    echo "    sudo ipset list "
+    echo
 }
 
 install(){
@@ -392,6 +411,8 @@ install(){
     set_rsyslog
     install_dog
     set_incron
+    show_process Install $PROJECT_NAME done.
+    show_tip
 }
 
 uninstall(){
