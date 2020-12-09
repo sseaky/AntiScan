@@ -275,7 +275,7 @@ prompt_param(){
         func_input_param -v CURRENT_SSH_IP -a "current login source ip" -n
     fi
 
-    [ -s "$IPSET_SAVE_FILE" ] && func_input_param -v flag_ipset_restore -y -a "$TRUST_FILE is exist" -q "Restore it?"
+    [ -s "$IPSET_SAVE_FILE" ] && func_input_param -v flag_ipset_restore -y -a "$TRUST_FILE is exist" -q "Restore it?" || flag_ipset_restore=false
 
 #    [ -s "$TRUST_FILE" ] && func_input_param -v flag_import_trust -y -q "Import items in $TRUST_FILE?"
 #    $flag_import_trust && TRUST_NETWORK=$(sort_list $TRUST_NETWORK" "`cat "$TRUST_FILE" | awk -F "," '/^[0-9]+/{print $1}' | xargs`)
