@@ -1,6 +1,6 @@
 # About
 
-The project will discover the port scanner and block them. 
+The project will deploy a mechanism on server to anti port scanner.
 
 The port scanner who try to inspect the sensitive ports of server will be logged with iptables and be added into blacklist by incron task immediately for certain time.
 
