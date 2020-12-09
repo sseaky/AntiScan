@@ -1,79 +1,27 @@
 # About
 
-​	The project will discover the port scanner and block them. The port scanner who try to inspect the common ports of server will be logged with iptables and be added into blacklist. 
+The project will discover the port scanner and block them. 
 
+The port scanner who try to inspect the sensitive ports of server will be logged with iptables and be added into blacklist by incron task immediately for certain time.
 
-
-# Usage
-
-- ### Create ipset
+# **Install**
 
 ```bash
-apt-get install ipset
-ipset create TRUST hash:net hashsize 4096 maxelem 1000000 timeout 0
-ipset create THREAT hash:net hashsize 4096 maxelem 1000000 timeout 0
+sudo -E bash -c "bash <(wget -qO - https://github.com/sseaky/AntiScan/raw/master/antiscan_onekey.sh) install"
 ```
 
-​	Add client to trust set
+or
 
 ```bash
-ipset add TRUST x.x.x.x
+wget https://github.com/sseaky/AntiScan/raw/master/antiscan_onekey.sh
+sudo -E bash antiscan_onekey.sh install
 ```
 
-- ### Add iptables rules
+![install](img/install.png)
 
-```bash
-iptables -A INPUT -m state --state RELATED,ESTABLISHED -j ACCEPT
-iptables -A INPUT -m set --match-set TRUST src -m comment --comment "ACCEPT TRUST LIST" -j ACCEPT
-iptables -A INPUT -p icmp -m length --length 128 -m comment --comment "MARK TRUST" -j LOG --log-prefix "TRUST: "
-iptables -A INPUT -m set --match-set THREAT src -m comment --comment "DROP THREAT LIST" -j DROP
-iptables -A INPUT -p tcp -m multiport --dports 21,22,23,53,69,80,110,123,443,1080,3128,3306,3389,6379,8080 -m comment --comment "MARK THREAT" -j LOG --log-prefix "THREAT: "
-```
+# Magic Ping
 
-- ### Redirect log
-
-  iptables log will send to /var/log/syslog by default, redirect them to new file.
-
-```bash
-vim /etc/rsyslog.d/10-iptables.conf
-```
-
-> :msg,contains,"] TRUST: " /var/log/iptables.log
->
-> :msg,contains,"] THREAT: " /var/log/iptables.log
->
-> & ~
-
-```bash
-/etc/init.d/rsyslog restart
-```
-
-- ### Initiate
-
-  install [ipip-ipdb](https://github.com/ipipdotnet/ipdb-python.git) for location
-
-```bash
-pip3 install ipip-ipdb
-./punisher.py --init
-```
-
-- ### Add crontab
-
-```bash
-crontab -e
-```
-
-> */1 * * * * /path/punisher.py --work
-
-
-
-​	refer to help menu for more usage.
-
-
-
-# Note
-
-​	If user is blocked by trigger, just send a specific size icmp packet to trust himself. 
+There is a magic length to set up on installment, If user want to add current server to trust list, just send the a icmp packet of magic length (default 100).
 
 ##### Windows:
 
@@ -85,5 +33,28 @@ ping -l 100 x.x.x.x
 
 ```
 ping -s 100 x.x.x.x
+```
+
+# Usage
+
+```bash
+$ antiscan_dog.sh -h
+
+Usage:
+  -d    Debug mode
+  -r    Run
+  -s    Show statistic
+  -f    Log file. default /var/log/antiscan.log
+
+Tips:
+  Comment/uncomment the item in root's incrontab to disable/enable the trigger:
+    sudo incrontab -e
+
+  Alter iptables to customize sensible ports
+    sudo iptables -nvL --line-number
+
+  Alter ipset to customize trust/threat list
+    sudo ipset list
+
 ```
 
