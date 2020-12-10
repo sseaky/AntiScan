@@ -4,6 +4,8 @@ The project will deploy a mechanism on server to anti port scanner.
 
 The port scanner who try to inspect the sensitive ports of server will be logged with iptables and be added into blacklist by incron task immediately for certain time.
 
+Test on **Ubuntu/Debian**.
+
 # **Install**
 
 ```bash
@@ -45,6 +47,8 @@ Usage:
   -r    Run
   -s    Show statistic
   -f    Log file. default /var/log/antiscan.log
+  -x    remove trust ip
+  -y    remove threat ip
 
 Tips:
   Comment/uncomment the item in root's incrontab to disable/enable the trigger:

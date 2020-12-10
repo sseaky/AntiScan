@@ -57,7 +57,7 @@ analyse(){
     $DEBUG && laststamp=0 || read laststamp <<< `head -n 1 $LASTSTAMP_FILE`
 
     tail -n $READ_LINE $LOG_FILE |
-        sed -r 's/([0-9]{10,10})\s+(\S+).*antiscan_([^ :]+).*?SRC=(\S+).*?PROTO=(\S+)(.*)/\1 \2 \3 \4 \5 \6/g' |
+        sed -r 's/([0-9]{10,10})\s+(\S+).*antiscan_([^ :]+).*?SRC=(\S+).*?LEN=(\S+).*?PROTO=(\S+)(.*)/\1 \2 \3 \4 \5 \6 \7/g' |
         awk -v lslf=$LASTSTAMP_FILE -v ltst=$laststamp -v pn=$PROJECT_NAME \
             -v thf=$THREAT_FILE -v fthf=$FLAG_THREAT_FILE -v trf=$TRUST_FILE -v ftrf=$FLAG_TRUST_FILE \
             -v tmthreat=$TIMEOUT_THREAT -v tmtrust=$TIMEOUT_TRUST \
@@ -68,7 +68,7 @@ BEGIN {
 }
 /.+/{
 if(debug){print $0};
-unixstamp=$1;datetime=$2;catalog=$3;ip=$4;proto=$5;misc=$6;
+unixstamp=$1;datetime=$2;catalog=$3;ip=$4;len=$5;proto=$6;misc=$7;
 if (unixstamp>ltst)
     {
     if(catalog=="trust")
@@ -80,7 +80,7 @@ if (unixstamp>ltst)
         {threat_objs[ip",ip"]=ip; threat_objs[ip",count"]+=1; threat_objs[ip",unixstamp"]=unixstamp;
         threat_objs[ip",datetime"]=datetime;
         threat_ips[ip]=1;
-        cmd="echo "$7" | sed s/DPT=//gI"; cmd | getline port; close(cmd);
+        cmd="echo "$8" | sed s/DPT=//gI"; cmd | getline port; close(cmd);
         threat_objs[ip",port"]=threat_objs[ip",port"]" "port;
         change["threat"]+=1;
         }
