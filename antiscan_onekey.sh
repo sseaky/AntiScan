@@ -434,14 +434,18 @@ uninstall(){
     /etc/init.d/incron restart
 }
 
+update(){
+    install_dog
+}
+
 show_usage(){
-    echo `basename $0` {install|uninstall}
+    echo `basename $0` {install|uninstall|update}
 }
 
 check_root
 
 case $1 in
-install|uninstall)
+install|uninstall|update)
     $1
     ;;
 *)

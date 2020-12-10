@@ -6,6 +6,8 @@
 # config #
 ##########
 
+VERSION=20201210
+
 DEBUG=false
 
 PROJECT_NAME="antiscan"
@@ -26,7 +28,7 @@ INCRON_TABLE="/var/spool/incron/root"
 READ_LINE=10
 
 # 统计列表保存时长
-DETAIL_HISTORY=$(( 3600 * 24 * 180))
+DETAIL_HISTORY=$(( 3600 * 24 * 90))
 
 ## ipset超时
 TIMEOUT_THREAT=$(( 3600 * 24 * 1 ))
@@ -90,7 +92,7 @@ for(ip in threat_ips)
     {
     if(debug){print ip};
     system("ipset add --exist "pn"_threat "ip" timeout "tmthreat);
-    cmd="echo "threat_objs[ip",port"]" | tr \" \" \"\\n\" | sort | uniq | xargs ";
+    cmd="echo "threat_objs[ip",port"]" | tr \" \" \"\\n\" | sort -n | uniq | xargs ";
     cmd | getline ports;
     threat_objs[ip",port"]=ports;
     system("echo "ip","threat_objs[ip",count"]","threat_objs[ip",datetime"]","threat_objs[ip",unixstamp"]","ports" >> "thf)
@@ -101,14 +103,14 @@ for(ip in trust_ips)
     if(debug){print ip};
     system("ipset add --exist "pn"_trust "ip" timeout "tmtrust);
     system("ipset del -q "pn"_threat "ip);
-    system("echo "ip","trust_objs[ip",datetime"]","trust_objs[ip",unixstamp"]" >> "trf)
+    system("echo "ip","trust_objs[ip",count"]","trust_objs[ip",datetime"]","trust_objs[ip",unixstamp"]",0 >> "trf)
     }
 if(!debug){
     system("echo "unixstamp" > "lslf);
     }
 if (change["threat"]>0){system("touch "fthf)}
 if (change["trust"]>0){system("touch "ftrf)}
-if (change["trust"]+change["threat"] > 0){system("ipset save > "isf)}
+if (change["trust"]+change["threat"] > 0){system("ipset -q save > "isf)}
 if(debug){
     print "change_trust:"change["trust"]", change_threat:"change["threat"];
 }
@@ -133,16 +135,17 @@ if(debug){print "  --trust file--"};
 }
 /^[0-9]+/{
 if(debug){print $0};
-    ip=$1;datetime=$2;unixstamp=$3;
+    ip=$1;count=$2;datetime=$3;unixstamp=$4;port=$5;
     trust_ips[ip]=1;
-    trust_objs[ip",ip"]=ip; trust_objs[ip",unixstamp"]=unixstamp; trust_objs[ip",datetime"]=datetime;
+    trust_objs[ip",ip"]=ip; trust_objs[ip",count"]+=count; trust_objs[ip",unixstamp"]=unixstamp;
+    trust_objs[ip",datetime"]=datetime; ports=0;
 }
 END{
-system("echo ip,datetime,unixstamp > "trf)
+system("echo ip,count,datetime,unixstamp,port > "trf)
 for (ip in trust_ips)
     {
     if (ns - trust_objs[ip",unixstamp"] < dh)
-        system("echo "ip","trust_objs[ip",datetime"]","trust_objs[ip",unixstamp"]" >> "trf)
+        system("echo "ip","trust_objs[ip",count"]","trust_objs[ip",datetime"]","trust_objs[ip",unixstamp"]","ports" >> "trf)
     }
 }
 '
@@ -171,7 +174,7 @@ END{
 system("echo ip,count,datetime,unixstamp,port > "thf)
 for (ip in threat_ips)
     {
-    cmd="echo "threat_objs[ip",port"]" | tr \" \" \"\\n\" | sort | uniq | xargs ";
+    cmd="echo "threat_objs[ip",port"]" | tr \" \" \"\\n\" | sort -n | uniq | xargs ";
     cmd | getline ports;
     threat_objs[ip",port"]=ports;
     if (ns - threat_objs[ip",unixstamp"] < dh)
@@ -191,6 +194,8 @@ show_usage(){
     echo "  -r    Run"
     echo "  -s    Show statistic"
     echo "  -f    Log file. default ${LOG_FILE}"
+    echo "  -x    remove trust ip"
+    echo "  -y    remove threat ip"
     echo
     echo "Tips:"
     echo "  Comment/uncomment the item in root's incrontab to disable/enable the trigger:"
@@ -204,16 +209,23 @@ show_usage(){
     echo
 }
 
+remove_ip(){
+    [ "$1" = "trust" ] && fn=$TRUST_FILE || fn=$THREAT_FILE
+    ipset -q del ${PROJECT_NAME}_$1 $2
+    sed -i "/^$2.*$/d" $fn
+    ipset -q save > $IPSET_SAVE_FILE
+}
+
 show_stat(){
-    if [ -f $TRUST_FILE ]
-    then
-        echo --trust--
-        cat $TRUST_FILE
-    fi
     if [ -f $THREAT_FILE ]
     then
         echo --threat--
         cat $THREAT_FILE
+    fi
+    if [ -f $TRUST_FILE ]
+    then
+        echo --trust--
+        cat $TRUST_FILE
     fi
 }
 
@@ -224,14 +236,16 @@ main(){
 }
 
 FLAG_RUN=false
-while getopts 'df:hrs' opt
+while getopts 'df:hrsx:y:' opt
 do
     case $opt in
         d) DEBUG=true ;;
         f) logfile=$OPTARG ;;
         r) FLAG_RUN=true ;;
-        s) show_stat;exit ;;
-        *) show_usage;exit ;;
+        s) show_stat; exit ;;
+        x) remove_ip trust $OPTARG; exit ;;
+        y) remove_ip threat $OPTARG; exit ;;
+        *) show_usage; exit ;;
     esac
 done
 
