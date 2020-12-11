@@ -25,10 +25,10 @@ IPSET_SAVE_FILE=${PROJECT_DIR}/ipset.save
 INCRON_TABLE="/var/spool/incron/root"
 
 # 每次读入日志行数，倒数
-READ_LINE=10
+READ_LINE=20
 
 # 统计列表保存时长
-DETAIL_HISTORY=$(( 3600 * 24 * 90))
+DETAIL_HISTORY=$(( 3600 * 24 * 7))
 
 ## ipset超时
 TIMEOUT_THREAT=$(( 3600 * 24 * 1 ))
