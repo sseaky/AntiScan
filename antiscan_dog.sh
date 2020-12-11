@@ -217,16 +217,17 @@ remove_ip(){
 }
 
 show_stat(){
-    if [ -f $THREAT_FILE ]
+    show_file(){
+    if [ -f "$1" ]
     then
-        echo --threat--
-        cat $THREAT_FILE | sort -n -t "," -k4
+        echo -- $1 --
+        cat $1 | sort -n -t "," -k4 | awk -F "," '{
+        if (NR==1){datatime=$3}else{datatime=substr($3,3,2)"."substr($3,5,2)"."substr($3,7,2)" "substr($3,9,2)":"substr($3,11,2)":"substr($3,13,2)}
+        printf "%-15s %-5s %-17s %-10s %s\n",$1,$2,datatime,$4,$5}'
     fi
-    if [ -f $TRUST_FILE ]
-    then
-        echo --trust--
-        cat $TRUST_FILE | sort -n -t "," -k4
-    fi
+    }
+    show_file $THREAT_FILE
+    show_file $TRUST_FILE
 }
 
 main(){
