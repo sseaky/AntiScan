@@ -220,12 +220,12 @@ show_stat(){
     if [ -f $THREAT_FILE ]
     then
         echo --threat--
-        cat $THREAT_FILE
+        cat $THREAT_FILE | sort -n -t "," -k4
     fi
     if [ -f $TRUST_FILE ]
     then
         echo --trust--
-        cat $TRUST_FILE
+        cat $TRUST_FILE | sort -n -t "," -k4
     fi
 }
 
