@@ -23,7 +23,7 @@ sudo -E bash antiscan_onekey.sh install
 
 # Magic Ping
 
-There is a magic length to set up on installment, If user want to add current server to trust list, just send the a icmp packet of magic length (default 100).
+There is a magic length to set up on installment, If user want to add current client to trust list, just send the a ICMP packet with magic length payload (default 100).
 
 ##### Windows:
 
@@ -36,6 +36,8 @@ ping -l 100 x.x.x.x
 ```
 ping -s 100 x.x.x.x
 ```
+
+The length in iptable rules is **28 bytes** larger than magic ping, because it generally includes 20 bytes IP heads and 8 bytes ICMP header.
 
 # Usage
 
