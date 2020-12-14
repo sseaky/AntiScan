@@ -6,7 +6,7 @@
 # config #
 ##########
 
-VERSION=20201210
+VERSION=20201214
 
 DEBUG=false
 
@@ -17,8 +17,10 @@ LOG_FILE=${LOG_DIR}/${PROJECT_NAME}.log
 
 LASTSTAMP_FILE=${PROJECT_DIR}/laststamp
 THREAT_FILE=${PROJECT_DIR}/threat.csv
+THREAT_FILE_NEW=${THREAT_FILE}.new
 FLAG_THREAT_FILE=${PROJECT_DIR}/flag_threat
 TRUST_FILE=${PROJECT_DIR}/trust.csv
+TRUST_FILE_NEW=${TRUST_FILE}.new
 FLAG_TRUST_FILE=${PROJECT_DIR}/flag_trust
 IPSET_SAVE_FILE=${PROJECT_DIR}/ipset.save
 
@@ -56,10 +58,13 @@ analyse(){
 
     $DEBUG && laststamp=0 || read laststamp <<< `head -n 1 $LASTSTAMP_FILE`
 
+    [ -f "${TRUST_FILE_NEW}" ] && rm ${TRUST_FILE_NEW}
+    [ -f "${THREAT_FILE_NEW}" ] && rm ${THREAT_FILE_NEW}
+
     tail -n $READ_LINE $LOG_FILE |
         sed -r 's/([0-9]{10,10})\s+(\S+).*antiscan_([^ :]+).*?SRC=(\S+).*?LEN=(\S+).*?PROTO=(\S+)(.*)/\1 \2 \3 \4 \5 \6 \7/g' |
         awk -v lslf=$LASTSTAMP_FILE -v ltst=$laststamp -v pn=$PROJECT_NAME \
-            -v thf=$THREAT_FILE -v fthf=$FLAG_THREAT_FILE -v trf=$TRUST_FILE -v ftrf=$FLAG_TRUST_FILE \
+            -v thfn=$THREAT_FILE_NEW -v trfn=$TRUST_FILE_NEW \
             -v tmthreat=$TIMEOUT_THREAT -v tmtrust=$TIMEOUT_TRUST \
             -v isf=$IPSET_SAVE_FILE \
             -v debug=`$DEBUG && echo 1 || echo 0` \
@@ -88,28 +93,32 @@ if (unixstamp>ltst)
 }
 END{
 if(debug){print "  --threat--"};
+i=1;
 for(ip in threat_ips)
     {
+    if(i==1){system(": > "thfn)}
+    i+=1;
     if(debug){print ip};
     system("ipset add --exist "pn"_threat "ip" timeout "tmthreat);
     cmd="echo "threat_objs[ip",port"]" | tr \" \" \"\\n\" | sort -n | uniq | xargs ";
     cmd | getline ports;
     threat_objs[ip",port"]=ports;
-    system("echo "ip","threat_objs[ip",count"]","threat_objs[ip",datetime"]","threat_objs[ip",unixstamp"]","ports" >> "thf)
+    system("echo "ip","threat_objs[ip",count"]","threat_objs[ip",datetime"]","threat_objs[ip",unixstamp"]","ports" >> "thfn)
     }
 if(debug){print "  --trust--"};
+i=1;
 for(ip in trust_ips)
     {
+    if(i==1){system(": > "trfn)}
+    i+=1;
     if(debug){print ip};
     system("ipset add --exist "pn"_trust "ip" timeout "tmtrust);
     system("ipset del -q "pn"_threat "ip);
-    system("echo "ip","trust_objs[ip",count"]","trust_objs[ip",datetime"]","trust_objs[ip",unixstamp"]",0 >> "trf)
+    system("echo "ip","trust_objs[ip",count"]","trust_objs[ip",datetime"]","trust_objs[ip",unixstamp"]",0 >> "trfn)
     }
 if(!debug){
     system("echo "unixstamp" > "lslf);
     }
-if (change["threat"]>0){system("touch "fthf)}
-if (change["trust"]>0){system("touch "ftrf)}
 if (change["trust"]+change["threat"] > 0){system("ipset -q save > "isf)}
 if(debug){
     print "change_trust:"change["trust"]", change_threat:"change["threat"];
@@ -123,11 +132,12 @@ merge(){
 
     now_stamp=`date +%s`
 
-    if [ -f "$FLAG_TRUST_FILE" -a -f "$TRUST_FILE" ]
+    if [ -f "${TRUST_FILE_NEW}" ]
     then
-        cat "$TRUST_FILE" |
+        [ -f "$TRUST_FILE" ] || touch $TRUST_FILE
+        cat "$TRUST_FILE" "$TRUST_FILE_NEW" |
             awk -F "," -v ns=$now_stamp -v dh=$DETAIL_HISTORY \
-                -v trf=$TRUST_FILE -v ftrf=$FLAG_TRUST_FILE \
+                -v trf=$TRUST_FILE \
                 -v debug=`$DEBUG && echo 1 || echo 0` \
 '
 BEGIN{
@@ -149,14 +159,15 @@ for (ip in trust_ips)
     }
 }
 '
-        $DEBUG || rm $FLAG_TRUST_FILE
+        $DEBUG || rm ${TRUST_FILE_NEW}
     fi
 
-    if [ -f "$FLAG_THREAT_FILE" -a -f "$THREAT_FILE" ]
+    if [ -f "$THREAT_FILE_NEW" ]
     then
-        cat "$THREAT_FILE" |
+        [ -f "$THREAT_FILE" ] || touch $THREAT_FILE
+        cat "$THREAT_FILE" $THREAT_FILE_NEW |
             awk -F "," -v ns=$now_stamp -v dh=$DETAIL_HISTORY \
-                -v thf=$THREAT_FILE -v fthf=$FLAG_THREAT_FILE \
+                -v thf=$THREAT_FILE \
                 -v debug=`$DEBUG && echo 1 || echo 0` \
 '
 BEGIN{
@@ -182,7 +193,7 @@ for (ip in threat_ips)
     }
 }
 '
-        $DEBUG || rm $FLAG_THREAT_FILE
+        $DEBUG || rm $THREAT_FILE_NEW
     fi
 
 }
@@ -223,7 +234,7 @@ show_stat(){
         echo -- $1 --
         cat $1 | sort -n -t "," -k4 | awk -F "," '{
         if (NR==1){datatime=$3}else{datatime=substr($3,3,2)"."substr($3,5,2)"."substr($3,7,2)" "substr($3,9,2)":"substr($3,11,2)":"substr($3,13,2)}
-        printf "%-15s %-5s %-17s %-10s %s\n",$1,$2,datatime,$4,$5}'
+        printf "%-15s  %-5s  %-17s  %-10s  %s\n",$1,$2,datatime,$4,$5}'
     fi
     }
     show_file $THREAT_FILE
