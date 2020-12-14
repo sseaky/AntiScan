@@ -416,7 +416,7 @@ install(){
     set_rsyslog
     install_dog
     set_incron
-    show_process Install $PROJECT_NAME done.
+    show_process "Install $PROJECT_NAME done."
     show_tip
 }
 
@@ -432,10 +432,13 @@ uninstall(){
 #    quite_rm ${PROJECT_DIR}
     quite_exec echo : > ${INCRON_TABLE}
     /etc/init.d/incron restart
+    show_process "Uninstall $PROJECT_NAME done."
 }
 
 update(){
-    install_dog
+    flag_update=true
+    $flag_update && install_dog
+    show_process "Update $DOG_PATH done"
 }
 
 show_usage(){
