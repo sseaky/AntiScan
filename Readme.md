@@ -23,7 +23,7 @@ sudo -E bash antiscan_onekey.sh install
 
 # Magic Ping
 
-There is a magic length to set up on installment, If user want to add current client to trust list, just send the a ICMP packet with magic length payload (default 100).
+There is a magic length to set up on installment, If user want to add current client to trust list, just send the a ICMP packet with the payload of magic length (default 100).
 
 ##### Windows:
 
@@ -62,5 +62,11 @@ Tips:
   Alter ipset to customize trust/threat list
     sudo ipset list
 
+```
+
+# Update
+
+```bash
+sudo -E bash -c "bash <(wget -qO - https://github.com/sseaky/AntiScan/raw/master/antiscan_onekey.sh) update"
 ```
 
