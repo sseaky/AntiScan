@@ -56,7 +56,7 @@ analyse(){
     $DEBUG && echo --function ${FUNCNAME[0]}--
     if [ ! -s "$LOG_FILE" ]; then exit; fi
 
-    $DEBUG && laststamp=0 || read laststamp <<< `head -n 1 $LASTSTAMP_FILE`
+    ( $DEBUG || $FLAG_PARSE_WHOLE_LOG ) && laststamp=0 || read laststamp <<< `head -n 1 $LASTSTAMP_FILE`
 
     [ -f "${TRUST_FILE_NEW}" ] && rm ${TRUST_FILE_NEW}
     [ -f "${THREAT_FILE_NEW}" ] && rm ${THREAT_FILE_NEW}
@@ -209,6 +209,7 @@ show_usage(){
     echo "  -r    Run"
     echo "  -s    Show statistic"
     echo "  -f    Log file. default ${LOG_FILE}"
+    echo "  -w    Parse whole log file"
     echo "  -x    remove trust ip"
     echo "  -y    remove threat ip"
     echo
