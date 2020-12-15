@@ -34,7 +34,7 @@ DETAIL_HISTORY=$(( 3600 * 24 * 7))
 
 ## ipset超时
 TIMEOUT_THREAT=$(( 3600 * 24 * 1 ))
-TIMEOUT_TRUST=$(( 3600 * 24 * 30 ))
+TIMEOUT_TRUST=$(( 3600 * 24 * 14 ))
 
 
 ######
@@ -69,8 +69,7 @@ analyse(){
             -v isf=$IPSET_SAVE_FILE \
             -v debug=`$DEBUG && echo 1 || echo 0` \
 '
-BEGIN {
-}
+BEGIN {}
 /.+/{
 if(debug){print $0};
 unixstamp=$1;datetime=$2;catalog=$3;ip=$4;len=$5;proto=$6;misc=$7;
@@ -100,10 +99,12 @@ for(ip in threat_ips)
     i+=1;
     if(debug){print ip};
     system("ipset add --exist "pn"_threat "ip" timeout "tmthreat);
-    cmd="echo "threat_objs[ip",port"]" | tr \" \" \"\\n\" | sort -n | uniq | xargs ";
+    cmd="echo "threat_objs[ip",port"]" | tr \" \" \"\\n\" | grep -v ^$ | sort -n | uniq | xargs ;";
     cmd | getline ports;
+    close(cmd);
     threat_objs[ip",port"]=ports;
     system("echo "ip","threat_objs[ip",count"]","threat_objs[ip",datetime"]","threat_objs[ip",unixstamp"]","ports" >> "thfn)
+    last_ip=ip
     }
 if(debug){print "  --trust--"};
 i=1;
@@ -185,8 +186,9 @@ END{
 system("echo ip,count,datetime,unixstamp,port > "thf)
 for (ip in threat_ips)
     {
-    cmd="echo "threat_objs[ip",port"]" | tr \" \" \"\\n\" | sort -n | uniq | xargs ";
+    cmd="echo "threat_objs[ip",port"]" | tr \" \" \"\\n\" | grep -v ^$ | sort -n | uniq | xargs ";
     cmd | getline ports;
+    close(cmd)
     threat_objs[ip",port"]=ports;
     if (ns - threat_objs[ip",unixstamp"] < dh)
         system("echo "ip","threat_objs[ip",count"]","threat_objs[ip",datetime"]","threat_objs[ip",unixstamp"]","ports" >> "thf)
@@ -248,13 +250,14 @@ main(){
 }
 
 FLAG_RUN=false
-while getopts 'df:hrsx:y:' opt
+while getopts 'df:hrswx:y:' opt
 do
     case $opt in
         d) DEBUG=true ;;
         f) logfile=$OPTARG ;;
         r) FLAG_RUN=true ;;
         s) show_stat; exit ;;
+        w) READ_LINE=100000 ;;
         x) remove_ip trust $OPTARG; exit ;;
         y) remove_ip threat $OPTARG; exit ;;
         *) show_usage; exit ;;
