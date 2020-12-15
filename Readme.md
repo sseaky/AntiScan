@@ -70,6 +70,8 @@ Tips:
 
 ```
 
+![install](img/show.png)
+
 # Update
 
 ```bash
