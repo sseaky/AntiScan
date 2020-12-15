@@ -61,7 +61,9 @@ analyse(){
     [ -f "${TRUST_FILE_NEW}" ] && rm ${TRUST_FILE_NEW}
     [ -f "${THREAT_FILE_NEW}" ] && rm ${THREAT_FILE_NEW}
 
-    tail -n $READ_LINE $LOG_FILE |
+    $FLAG_PARSE_WHOLE_LOG && GET_CONTENT="cat ${LOG_FILE}*" || GET_CONTENT="tail -n $READ_LINE $LOG_FILE"
+
+    $GET_CONTENT |
         sed -r 's/([0-9]{10,10})\s+(\S+).*antiscan_([^ :]+).*?SRC=(\S+).*?LEN=(\S+).*?PROTO=(\S+)(.*)/\1 \2 \3 \4 \5 \6 \7/g' |
         awk -v lslf=$LASTSTAMP_FILE -v ltst=$laststamp -v pn=$PROJECT_NAME \
             -v thfn=$THREAT_FILE_NEW -v trfn=$TRUST_FILE_NEW \
@@ -250,6 +252,7 @@ main(){
 }
 
 FLAG_RUN=false
+FLAG_PARSE_WHOLE_LOG=false
 while getopts 'df:hrswx:y:' opt
 do
     case $opt in
@@ -257,7 +260,7 @@ do
         f) logfile=$OPTARG ;;
         r) FLAG_RUN=true ;;
         s) show_stat; exit ;;
-        w) READ_LINE=100000 ;;
+        w) FLAG_PARSE_WHOLE_LOG=true ;;
         x) remove_ip trust $OPTARG; exit ;;
         y) remove_ip threat $OPTARG; exit ;;
         *) show_usage; exit ;;
