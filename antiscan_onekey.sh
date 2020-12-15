@@ -19,7 +19,7 @@ SENSITIVE_ADDRESS="0.0.0.0/0"
 # 敏感端口
 SENSITIVE_TCP_PORTS="21:23,69,80,110,123,443,1080,1433,3128,3306,3389,6379,8080"
 # ping -s 100 可以将自己加入信任名单
-TRUST_ICMP_LENGTH=${TRUST_ICMP_LENGTH:-100}
+MAGIC_PING_LENGTH=${MAGIC_PING_LENGTH:-100}
 # 添加信任网络
 TRUST_NETWORK="127.0.0.0/8"
 THREAT_NETWORK=""
@@ -266,7 +266,7 @@ prompt_param(){
 
     func_input_param -v SENSITIVE_ADDRESS -a "sensitive ip" -d $SENSITIVE_ADDRESS
     func_input_param -v SENSITIVE_TCP_PORTS -a "sensitive ports" -d $SENSITIVE_TCP_PORTS
-    func_input_param -v TRUST_ICMP_LENGTH -a "magic length of icmp" -d $TRUST_ICMP_LENGTH
+    func_input_param -v MAGIC_PING_LENGTH -a "magic length of icmp" -d $MAGIC_PING_LENGTH
     func_input_param -v TRUST_NETWORK -d $TRUST_NETWORK -a "permanent trust network"
 
     if [ -n "$SSH_CLIENT" ]; then
@@ -283,7 +283,7 @@ prompt_param(){
 #    [ -s "$THREAT_FILE" ] && func_input_param -v flag_import_threat -y -q "Import items in $THREAT_FILE?"
 #    $flag_import_trust && THREAT_NETWORK=$(sort_list $THREAT_NETWORK" "`cat "$THREAT_FILE" | awk -F "," '/^[0-9]+/{print $1}' | xargs`)
 
-    show_param SENSITIVE_NIS SENSITIVE_ADDRESS SENSITIVE_TCP_PORTS TRUST_ICMP_LENGTH TRUST_NETWORK THREAT_NETWORK CURRENT_SSH_IP flag_ipset_restore
+    show_param SENSITIVE_NIS SENSITIVE_ADDRESS SENSITIVE_TCP_PORTS MAGIC_PING_LENGTH TRUST_NETWORK THREAT_NETWORK CURRENT_SSH_IP flag_ipset_restore
     [ -n "$CURRENT_SSH_IP" ] && TRUST_NETWORK=`sort_list "$TRUST_NETWORK $CURRENT_SSH_IP"`
 }
 
@@ -297,7 +297,7 @@ set_iptables(){
 
     `quite_exec iptables -L ${PROJECT_NAME}` && iptables -F ${PROJECT_NAME} || iptables -N ${PROJECT_NAME}
     iptables -A ${PROJECT_NAME} -m set --match-set ${PROJECT_NAME}_trust src -m comment --comment "accept ${PROJECT_NAME} trust" -j ACCEPT
-    iptables -A ${PROJECT_NAME} -p icmp -m length --length $(( $TRUST_ICMP_LENGTH + 28 )) -m comment --comment "mark ${PROJECT_NAME}_trust" -j LOG --log-prefix "${PROJECT_NAME}_trust: "
+    iptables -A ${PROJECT_NAME} -p icmp -m length --length $(( $MAGIC_PING_LENGTH + 28 )) -m comment --comment "mark ${PROJECT_NAME}_trust" -j LOG --log-prefix "${PROJECT_NAME}_trust: "
     iptables -A ${PROJECT_NAME} -p tcp -m multiport --dports `tr_space2comma ${SENSITIVE_TCP_PORTS}` -m comment --comment "mark ${PROJECT_NAME}_threat" -j LOG --log-prefix "${PROJECT_NAME}_threat: "
     iptables -A ${PROJECT_NAME} -m set --match-set ${PROJECT_NAME}_threat src -m comment --comment "drop ${PROJECT_NAME} threat" -j DROP
 

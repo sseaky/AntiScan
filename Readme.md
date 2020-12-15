@@ -51,10 +51,14 @@ Usage:
   -r    Run
   -s    Show statistic
   -f    Log file. default /var/log/antiscan.log
-  -x    remove trust ip
-  -y    remove threat ip
+  -w    Parse whole log file
+  -x    Remove trust ip
+  -y    Remove threat ip
 
 Tips:
+  Show statistic
+    sudo antiscan_dog.sh -s
+
   Comment/uncomment the item in root's incrontab to disable/enable the trigger:
     sudo incrontab -e
 

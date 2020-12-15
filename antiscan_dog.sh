@@ -214,10 +214,13 @@ show_usage(){
     echo "  -s    Show statistic"
     echo "  -f    Log file. default ${LOG_FILE}"
     echo "  -w    Parse whole log file"
-    echo "  -x    remove trust ip"
-    echo "  -y    remove threat ip"
+    echo "  -x    Remove trust ip"
+    echo "  -y    Remove threat ip"
     echo
     echo "Tips:"
+    echo "  Show statistic"
+    echo "    sudo antiscan_dog.sh -s"
+    echo
     echo "  Comment/uncomment the item in root's incrontab to disable/enable the trigger:"
     echo "    sudo incrontab -e"
     echo
