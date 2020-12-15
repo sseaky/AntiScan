@@ -12,6 +12,9 @@ DEBUG=false
 
 PROJECT_NAME="antiscan"
 PROJECT_DIR=/tmp/.${PROJECT_NAME}
+
+[ -d "$PROJECT_DIR" ] || mkdir $PROJECT_DIR
+
 LOG_DIR="/var/log"
 LOG_FILE=${LOG_DIR}/${PROJECT_NAME}.log
 
@@ -228,7 +231,7 @@ show_usage(){
 remove_ip(){
     [ "$1" = "trust" ] && fn=$TRUST_FILE || fn=$THREAT_FILE
     ipset -q del ${PROJECT_NAME}_$1 $2
-    sed -i "/^$2.*$/d" $fn
+    [ -s "$fn" ] && sed -i "/^$2.*$/d" $fn
     ipset -q save > $IPSET_SAVE_FILE
 }
 
