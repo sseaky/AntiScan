@@ -7,7 +7,8 @@
 ##########
 
 PROJECT_NAME="antiscan"
-PROJECT_DIR=/tmp/.${PROJECT_NAME}
+ROOT_DIR=${HOME:-/tmp}
+PROJECT_DIR=${ROOT_DIR}/.${PROJECT_NAME}
 
 [ -d "$PROJECT_DIR" ] || mkdir $PROJECT_DIR
 
@@ -31,7 +32,7 @@ INCRON_TABLE="/var/spool/incron/root"
 
 DOG_URL="https://github.com/sseaky/AntiScan/raw/master/antiscan_dog.sh"
 DOG_PATH="/usr/bin/${PROJECT_NAME}_dog.sh"
-LOCK_PATH=/tmp/.${PROJECT_NAME}.lock
+LOCK_PATH=${ROOT_DIR}/.${PROJECT_NAME}.lock
 
 THREAT_FILE=${PROJECT_DIR}/threat.csv
 TRUST_FILE=${PROJECT_DIR}/trust.csv
