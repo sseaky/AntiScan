@@ -394,6 +394,9 @@ show_result(){
 show_tip(){
     echo
     echo "Tips:"
+    echo "  Show statistic"
+    echo "    sudo antiscan_dog.sh -s"
+    echo
     echo "  Comment/uncomment the item in root's incrontab to disable/enable the trigger:"
     echo "    sudo incrontab -e"
     echo
