@@ -7,7 +7,7 @@
 ##########
 
 PROJECT_NAME="antiscan"
-ROOT_DIR=${HOME:-/tmp}
+ROOT_DIR="/tmp"
 PROJECT_DIR=${ROOT_DIR}/.${PROJECT_NAME}
 
 [ -d "$PROJECT_DIR" ] || mkdir $PROJECT_DIR
