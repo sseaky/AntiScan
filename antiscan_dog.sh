@@ -244,7 +244,7 @@ show_stat(){
     if [ -f "$1" ]
     then
         echo -- $1 --
-        cat $1 | sort -n -t "," -k4 | awk -F "," '{
+        cat $1 | sort -n -t "," -k4,4n | awk -F "," '{
         if (NR==1){datatime=$3}else{datatime=substr($3,3,2)"."substr($3,5,2)"."substr($3,7,2)" "substr($3,9,2)":"substr($3,11,2)":"substr($3,13,2)}
         printf "%-15s  %-5s  %-17s  %-10s  %s\n",$1,$2,datatime,$4,$5}'
     fi
