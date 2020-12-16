@@ -50,6 +50,7 @@ Usage:
   -d    Debug mode
   -r    Run
   -s    Show statistic
+  -t    Show statistic with location, need python >= 3.5
   -f    Log file. default /var/log/antiscan.log
   -w    Parse whole log file
   -x    Remove trust ip

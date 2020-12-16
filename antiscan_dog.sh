@@ -212,6 +212,7 @@ show_usage(){
     echo "  -d    Debug mode"
     echo "  -r    Run"
     echo "  -s    Show statistic"
+    echo "  -t    Show statistic with location, need python >= 3.5"
     echo "  -f    Log file. default ${LOG_FILE}"
     echo "  -w    Parse whole log file"
     echo "  -x    Remove trust ip"
@@ -253,6 +254,30 @@ show_stat(){
     show_file $TRUST_FILE
 }
 
+show_stat_py(){
+    py_script=${PROJECT_DIR}/antiscan_ip.py
+    py_url="https://github.com/sseaky/AntiScan/raw/master/antiscan_ip.py"
+    ipdb_file=${PROJECT_DIR}/ipipfree.ipdb
+    ipdb_md5="aab5c5e2f5a8647694fcc0fdd7e9fb39"
+    ipdb_url="https://github.com/sseaky/AntiScan/releases/download/0.1/ipipfree.tar.gz"
+
+    flag_down=true
+    which python3 > /dev/null 2>&1 || ( echo "Need python >= 3.5" && exit )
+    python3 -c "import ipdb" > /dev/null 2>&1 || ( echo "Need python module ipdb. sudo pip3 install ipip-ipdb" && exit )
+    [ -f "${ipdb_file}" ] && [ "`md5sum ${ipdb_file} | awk '{print $1}'`" = $ipdb_md5 ] && flag_down=false
+    if $flag_down; then
+        rm $ipdb_md5 > /dev/null 2>&1
+        wget $ipdb_url
+        tar zxf ipipfree.tar.gz
+        mv ipipfree.ipdb ${PROJECT_DIR}/
+        rm ipipfree.tar.gz
+    fi
+
+    [ -f "${py_script}" ] || wget $py_url
+    
+    python3 ${py_script}
+}
+
 main(){
     check_root
     analyse
@@ -261,13 +286,14 @@ main(){
 
 FLAG_RUN=false
 FLAG_PARSE_WHOLE_LOG=false
-while getopts 'df:hrswx:y:' opt
+while getopts 'df:hrstwx:y:' opt
 do
     case $opt in
         d) DEBUG=true ;;
         f) logfile=$OPTARG ;;
         r) FLAG_RUN=true ;;
         s) show_stat; exit ;;
+        t) show_stat_py; exit ;;
         w) FLAG_PARSE_WHOLE_LOG=true ;;
         x) remove_ip trust $OPTARG; exit ;;
         y) remove_ip threat $OPTARG; exit ;;
