@@ -315,7 +315,7 @@ ipset_add(){
 }
 
 set_ipset(){
-    show_process Set ipset rules
+    show_process "Set ipset rules"
     $flag_ipset_restore && (ipset -q restore < $IPSET_SAVE_FILE)
     `quite_exec ipset list -n ${PROJECT_NAME}_trust` || ipset create ${PROJECT_NAME}_trust hash:net hashsize 4096 maxelem 1000000 timeout 0
     `quite_exec ipset list -n ${PROJECT_NAME}_threat` || ipset create ${PROJECT_NAME}_threat hash:net hashsize 4096 maxelem 1000000 timeout 0
@@ -339,14 +339,16 @@ set_rsyslog(){
     cat > ${rsyslog_config} <<-EOF
 \$template ${PROJECT_NAME}_tpl,"%timestamp:::date-unixtimestamp% %timestamp:::date-mysql% %timestamp% %msg:::drop-last-if%\n"
 
-:msg, ereregex, "${PROJECT_NAME}_(trust|threat):" ${LOG_DIR}/${PROJECT_NAME}.log;${PROJECT_NAME}_tpl
+:msg, ereregex, "${PROJECT_NAME}_(trust|threat):" ${LOG_FILE};${PROJECT_NAME}_tpl
 & ~
 
 EOF
+    touch ${LOG_FILE} && chmod 644 ${LOG_FILE}
     /etc/init.d/rsyslog restart
 }
 
 set_incron(){
+    show_process "Set incrontab"
     INCRON_ALLOW="/etc/incron.allow"
     if [ -f "$INCRON_ALLOW" ]; then
         `grep -q "^root" $INCRON_ALLOW` || (echo root >> $INCRON_ALLOW)
@@ -364,15 +366,16 @@ EOF
 }
 
 set_logrotate(){
+    show_process "Set logrotate"
     logrotate_config=${LOGROTATE_CONFIG_DIR}/${PROJECT_NAME}
     cat > ${logrotate_config} <<-EOF
-${LOG_DIR}/LOGROTATE_CONFIG_DIR {
+${LOG_FILE} {
     weekly
     rotate 3
     missingok
     notifempty
     compress
-    nocreate
+    create 644 root root
 }
 EOF
 }
@@ -418,6 +421,7 @@ install(){
     set_ipset
     set_iptables
     set_rsyslog
+    set_logrotate
     install_dog
     set_incron
     show_process "Install $PROJECT_NAME done."
@@ -446,7 +450,7 @@ update(){
 }
 
 show_usage(){
-    echo `basename $0` {install|uninstall|update}
+    echo "`basename $0` {install|uninstall|update}"
 }
 
 check_root
@@ -456,6 +460,6 @@ install|uninstall|update)
     $1
     ;;
 *)
-    show_useage;;
+    show_usage;;
 esac
 
