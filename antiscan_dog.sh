@@ -273,8 +273,8 @@ show_stat_py(){
         rm ipipfree.tar.gz
     fi
 
-    [ -f "${py_script}" ] || wget $py_url
-    
+    [ -f "${py_script}" ] || wget -O $py_script $py_url
+
     python3 ${py_script}
 }
 
