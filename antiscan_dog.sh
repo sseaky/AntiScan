@@ -254,6 +254,11 @@ show_stat(){
     show_file $TRUST_FILE
 }
 
+exit1(){
+    echo ERROR: $*
+    exit 1
+}
+
 show_stat_py(){
     py_script=${PROJECT_DIR}/antiscan_ip.py
     py_url="https://github.com/sseaky/AntiScan/raw/master/antiscan_ip.py"
@@ -262,8 +267,8 @@ show_stat_py(){
     ipdb_url="https://github.com/sseaky/AntiScan/releases/download/0.1/ipipfree.tar.gz"
 
     flag_down=true
-    which python3 > /dev/null 2>&1 || ( echo "Need python >= 3.5" && exit )
-    python3 -c "import ipdb" > /dev/null 2>&1 || ( echo "Need python module ipdb. sudo pip3 install ipip-ipdb" && exit )
+    which python3 > /dev/null 2>&1 || exit1 "Need python >= 3.5"
+    python3 -c "import ipdb" > /dev/null 2>&1 || exit1 'Need python module ipdb. Run "sudo pip3 install ipip-ipdb"'
     [ -f "${ipdb_file}" ] && [ "`md5sum ${ipdb_file} | awk '{print $1}'`" = $ipdb_md5 ] && flag_down=false
     if $flag_down; then
         rm $ipdb_md5 > /dev/null 2>&1
