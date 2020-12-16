@@ -343,7 +343,7 @@ set_rsyslog(){
 & ~
 
 EOF
-    touch ${LOG_FILE} && chmod 644 ${LOG_FILE}
+    touch ${LOG_FILE} && chmod 666 ${LOG_FILE}
     /etc/init.d/rsyslog restart
 }
 
@@ -375,7 +375,7 @@ ${LOG_FILE} {
     missingok
     notifempty
     compress
-    create 644 root root
+    create 666 root root
 }
 EOF
 }
