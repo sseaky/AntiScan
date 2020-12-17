@@ -73,6 +73,10 @@ Tips:
 
 ![install](img/show.png)
 
+If python3 is available, it can display location with -t.
+
+![install](img/show_loc.png)
+
 # Update
 
 ```bash
