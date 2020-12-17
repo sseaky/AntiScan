@@ -23,7 +23,6 @@ def parse(f):
                 continue
             line = line.strip()
             d = {title[i]: x for i, x in enumerate(line.split(','))}
-            d['datetime'] = '{}.{}.{} {}:{}:{}'.format(*[d['datetime'][2 * i + 2: 2 * i + 4] for i in range(6)])
             d['count'] = int(d['count'])
             d['unixstamp'] = int(d['unixstamp'])
             d1 = db.find_map(d['ip'], 'CN')

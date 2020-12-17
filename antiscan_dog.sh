@@ -109,7 +109,9 @@ for(ip in threat_ips)
     cmd | getline ports;
     close(cmd);
     threat_objs[ip",port"]=ports;
-    system("echo "ip","threat_objs[ip",count"]","threat_objs[ip",datetime"]","threat_objs[ip",unixstamp"]","ports" >> "thfn)
+    dt=threat_objs[ip",datetime"]
+    dt1=substr(dt,3,2)"."substr(dt,5,2)"."substr(dt,7,2)" "substr(dt,9,2)":"substr(dt,11,2)":"substr(dt,13,2)
+    system("echo "ip","threat_objs[ip",count"]","dt1","threat_objs[ip",unixstamp"]","ports" >> "thfn)
     last_ip=ip
     }
 if(debug){print "  --trust--"};
@@ -121,7 +123,9 @@ for(ip in trust_ips)
     if(debug){print ip};
     system("ipset add --exist "pn"_trust "ip" timeout "tmtrust);
     system("ipset del -q "pn"_threat "ip);
-    system("echo "ip","trust_objs[ip",count"]","trust_objs[ip",datetime"]","trust_objs[ip",unixstamp"]",0 >> "trfn)
+    dt=trust_objs[ip",datetime"];
+    dt1=substr(dt,3,2)"."substr(dt,5,2)"."substr(dt,7,2)" "substr(dt,9,2)":"substr(dt,11,2)":"substr(dt,13,2);
+    system("echo "ip","trust_objs[ip",count"]","dt1","trust_objs[ip",unixstamp"]",0 >> "trfn)
     }
 if(!debug){
     system("echo "unixstamp" > "lslf);
@@ -246,8 +250,7 @@ show_stat(){
     then
         echo -- $1 --
         cat $1 | sort -n -t "," -k4,4n | awk -F "," '{
-        if (NR==1){datatime=$3}else{datatime=substr($3,3,2)"."substr($3,5,2)"."substr($3,7,2)" "substr($3,9,2)":"substr($3,11,2)":"substr($3,13,2)}
-        printf "%-15s  %-5s  %-17s  %-10s  %s\n",$1,$2,datatime,$4,$5}'
+        printf "%-15s  %-5s  %-17s  %-10s  %s\n",$1,$2,$3,$4,$5}'
     fi
     }
     show_file $THREAT_FILE
