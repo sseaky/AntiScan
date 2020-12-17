@@ -34,6 +34,9 @@ DOG_URL="https://github.com/sseaky/AntiScan/raw/master/antiscan_dog.sh"
 DOG_PATH="/usr/bin/${PROJECT_NAME}_dog.sh"
 LOCK_PATH=${ROOT_DIR}/.${PROJECT_NAME}.lock
 
+PY_URL="https://github.com/sseaky/AntiScan/raw/master/antiscan_ip.py"
+PY_PATH=${PROJECT_DIR}/antiscan_ip.py
+
 THREAT_FILE=${PROJECT_DIR}/threat.csv
 TRUST_FILE=${PROJECT_DIR}/trust.csv
 IPSET_SAVE_FILE=${PROJECT_DIR}/ipset.save
@@ -384,6 +387,7 @@ install_dog(){
     show_process Install `basename $DOG_PATH`
 #    cp ${PROJECT_NAME}_dog.sh $DOG_PATH
     wget -qO $DOG_PATH $DOG_URL
+    wget -qO $PY_PATH $PY_URL
     chmod +x $DOG_PATH
 }
 

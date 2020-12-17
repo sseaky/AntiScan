@@ -3,9 +3,10 @@
 # @Author: Seaky
 # @Date:   2020/12/16 17:00
 
-import ipdb
 import os
 import re
+
+import ipdb
 
 PROJECT_DIR = '/tmp/.antiscan'
 DB_FILE = '{}/ipipfree.ipdb'.format(PROJECT_DIR)
@@ -26,15 +27,21 @@ def parse(f):
             d['count'] = int(d['count'])
             d['unixstamp'] = int(d['unixstamp'])
             d1 = db.find_map(d['ip'], 'CN')
-            d['location'] = '{region_name}-{city_name}'.format(**d1) if d1['country_name'] == '中国' else d1[
-                'country_name']
+            locl = []
+            for k in loc:
+                if d1.get(k) and d1[k] not in locl:
+                    locl.append(d1[k])
+            d['location'] = '-'.join(locl)
             l.append(d)
         l.sort(key=lambda v: v['unixstamp'])
         title.insert(5, 'location')
         l.insert(0, {x: x for x in title})
         print('-- {} --'.format(f))
-        for x in l:
-            print('{ip:<15}  {count:<5}  {datetime:<17}  {unixstamp:<10}  {location:　<5}  {port}'.format(**x))
+        for i, x in enumerate(l):
+            if i == 0:
+                print('{ip:<15}  {count:<5}  {datetime:<17}  {unixstamp:<10}  {location:　<11}  {port}'.format(**x))
+            else:
+                print('{ip:<15}  {count:<5}  {datetime:<17}  {unixstamp:<10}  {location:　<7}  {port}'.format(**x))
 
 
 if __name__ == '__main__':
