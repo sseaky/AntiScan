@@ -17,7 +17,7 @@ SENSITIVE_NIS="all"
 # 敏感外网IP
 SENSITIVE_ADDRESS="0.0.0.0/0"
 # 敏感端口
-SENSITIVE_TCP_PORTS="21:23,69,80,110,123,443,1080,1433,3128,3306,3389,6379,8080"
+SENSITIVE_TCP_PORTS="21:23,53,69,80,110,123,443,1080,1433,3128,3306,3389,6379,8080"
 # ping -s 100 可以将自己加入信任名单
 MAGIC_PING_LENGTH=${MAGIC_PING_LENGTH:-100}
 # 添加信任网络
@@ -378,6 +378,7 @@ ${LOG_FILE} {
     missingok
     notifempty
     compress
+	copytruncate
     create 666 root root
 }
 EOF
