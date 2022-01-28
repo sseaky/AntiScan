@@ -83,3 +83,17 @@ If python3 is available, it can display location with -t.
 sudo -E bash -c "bash <(wget -qO - https://github.com/sseaky/AntiScan/raw/master/antiscan_onekey.sh) update"
 ```
 
+
+
+# Note
+
+### tail: inotify resources exhausted
+
+Append to /etc/sysctl.php
+
+```
+fs.inotify.max_user_watches = 1048576
+fs.inotify.max_user_instances = 1048576
+```
+
+\# sysctl -p

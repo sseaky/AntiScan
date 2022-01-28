@@ -7,8 +7,10 @@
 ##########
 
 PROJECT_NAME="antiscan"
-ROOT_DIR="/tmp"
+ROOT_DIR='/root'
 PROJECT_DIR=${ROOT_DIR}/.${PROJECT_NAME}
+
+GITHUB_MIRROR=${GITHUB_MIRROR:-https://github.com}
 
 [ -d "$PROJECT_DIR" ] || mkdir $PROJECT_DIR
 
@@ -17,7 +19,7 @@ SENSITIVE_NIS="all"
 # 敏感外网IP
 SENSITIVE_ADDRESS="0.0.0.0/0"
 # 敏感端口
-SENSITIVE_TCP_PORTS="21:23,53,69,80,110,123,443,1080,1433,3128,3306,3389,6379,8080"
+SENSITIVE_TCP_PORTS="21:23,69,80,110,443,1080,1433,3128,3306,3389,6379,8080,9999,59999"
 # ping -s 100 可以将自己加入信任名单
 MAGIC_PING_LENGTH=${MAGIC_PING_LENGTH:-100}
 # 添加信任网络
@@ -30,11 +32,11 @@ RSYSLOG_CONFIG_DIR="/etc/rsyslog.d"
 LOGROTATE_CONFIG_DIR="/etc/logrotate.d"
 INCRON_TABLE="/var/spool/incron/root"
 
-DOG_URL="https://github.com/sseaky/AntiScan/raw/master/antiscan_dog.sh"
+DOG_URL="${GITHUB_MIRROR}/sseaky/AntiScan/raw/master/antiscan_dog.sh"
 DOG_PATH="/usr/bin/${PROJECT_NAME}_dog.sh"
-LOCK_PATH=${ROOT_DIR}/.${PROJECT_NAME}.lock
+LOCK_PATH=${PROJECT_DIR}/.lock
 
-PY_URL="https://github.com/sseaky/AntiScan/raw/master/antiscan_ip.py"
+PY_URL="${GITHUB_MIRROR}/sseaky/AntiScan/raw/master/antiscan_ip.py"
 PY_PATH=${PROJECT_DIR}/antiscan_ip.py
 
 THREAT_FILE=${PROJECT_DIR}/threat.csv

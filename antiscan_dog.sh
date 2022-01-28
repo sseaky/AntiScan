@@ -11,7 +11,7 @@ VERSION=20201217
 DEBUG=false
 
 PROJECT_NAME="antiscan"
-ROOT_DIR="/tmp"
+ROOT_DIR='/root'
 PROJECT_DIR=${ROOT_DIR}/.${PROJECT_NAME}
 
 [ -d "$PROJECT_DIR" ] || mkdir $PROJECT_DIR
