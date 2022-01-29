@@ -8,6 +8,10 @@ Test on **Ubuntu/Debian**.
 
 ![install](img/test.gif)
 
+
+
+
+
 # **Install**
 
 ```bash
@@ -97,3 +101,24 @@ fs.inotify.max_user_instances = 1048576
 ```
 
 \# sysctl -p
+
+
+
+# 2022.1.29
+
+use antissh.sh to ban the ip of ssh brute-force
+
+add to incrontab (immediately)
+
+```
+/var/log/btmp   IN_MODIFY     flock -xn /root/.antissh.lock bash /usr/bin/antissh.sh
+```
+
+add to crontab (periodically)
+
+```
+*/5 * * * * /usr/bin/antissh.sh
+```
+
+
+
