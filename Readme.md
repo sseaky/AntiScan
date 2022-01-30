@@ -108,16 +108,28 @@ fs.inotify.max_user_instances = 1048576
 
 use antissh.sh to ban the ip of ssh brute-force
 
+install jq first to query geo info
+
+
+
 add to incrontab (immediately)
 
 ```
 /var/log/btmp   IN_MODIFY     flock -xn /root/.antissh.lock bash /usr/bin/antissh.sh
 ```
 
-add to crontab (periodically)
+Or add to crontab (periodically)
 
 ```
 */5 * * * * /usr/bin/antissh.sh
+```
+
+
+
+/etc/hosts.deny
+
+```
+ALL:206.189.xx.xx:deny # Sun Jan 30 22:14:10 CST 2022 | United Kingdom.England.London
 ```
 
 

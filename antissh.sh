@@ -5,6 +5,7 @@
 HEAD_COUNT=50
 FAIL_COUNT=10
 WHITELIST=''
+LOG_GEO=true
 DEBUG=false
 
 prelist=`cat /etc/hosts.deny | egrep -v '^\s*$' | egrep -v '^#' | cut -d":" -f 2 | xargs`
@@ -25,7 +26,15 @@ do
     continue
   fi
   if [[ ! " ${prelist[*]} " =~ " ${ip} " ]] ; then 
-    cmd="echo \"ALL:${ip}:deny  # `date`\" >> /etc/hosts.deny"
+    if $LOG_GEO ; then
+      if [ -n "`which jq`" ] ; then
+        a=`curl --silent https://api.ip.sb/geoip/$ip`
+        geo="| "`echo $a | jq .country`.`echo $a | jq .region`.`echo $a | jq .city`
+      else
+        echo "Install jq first"
+      fi
+    fi
+    cmd="echo \"ALL:${ip}:deny  # `date` ${geo//\"/}\" >> /etc/hosts.deny"
     $DEBUG && echo $cmd
     eval $cmd
   else
