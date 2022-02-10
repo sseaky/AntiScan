@@ -8,7 +8,7 @@ import re
 
 import ipdb
 
-PROJECT_DIR = '/tmp/.antiscan'
+PROJECT_DIR = '/root/.antiscan'
 DB_FILE = '{}/ipipfree.ipdb'.format(PROJECT_DIR)
 
 

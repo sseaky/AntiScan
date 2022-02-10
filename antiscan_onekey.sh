@@ -31,10 +31,14 @@ LOG_FILE=${LOG_DIR}/${PROJECT_NAME}.log
 RSYSLOG_CONFIG_DIR="/etc/rsyslog.d"
 LOGROTATE_CONFIG_DIR="/etc/logrotate.d"
 INCRON_TABLE="/var/spool/incron/root"
+CRON_TABLE="/var/spool/cron/crontabs/root"
 
 DOG_URL="${GITHUB_MIRROR}/sseaky/AntiScan/raw/master/antiscan_dog.sh"
 DOG_PATH="/usr/bin/${PROJECT_NAME}_dog.sh"
 LOCK_PATH=${PROJECT_DIR}/.lock
+
+ANTISSH_URL="${GITHUB_MIRROR}/sseaky/AntiScan/raw/master/antissh.sh"
+ANTISSH_PATH="/usr/bin/antissh.sh"
 
 PY_URL="${GITHUB_MIRROR}/sseaky/AntiScan/raw/master/antiscan_ip.py"
 PY_PATH=${PROJECT_DIR}/antiscan_ip.py
@@ -394,6 +398,15 @@ install_dog(){
     chmod +x $DOG_PATH
 }
 
+install_antissh(){
+    show_process Install `basename $DOG_PATH`
+    wget -qO $ANTISSH_PATH $ANTISSH_URL
+    chmod +x $ANTISSH_PATH
+    cat > ${CRON_TABLE} <<-EOF
+*/1 * * * * $ANTISSH_PATH
+EOF
+}
+
 show_result(){
     echo
     ipset list -n | xargs echo ipset rules
@@ -431,6 +444,7 @@ install(){
     set_logrotate
     install_dog
     set_incron
+    install_antissh
     show_process "Install $PROJECT_NAME done."
     show_tip
 }

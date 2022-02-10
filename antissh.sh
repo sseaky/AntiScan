@@ -34,7 +34,7 @@ do
         echo "Install jq first"
       fi
     fi
-    cmd="echo \"ALL:${ip}:deny  # `date` ${geo//\"/}\" >> /etc/hosts.deny"
+    cmd="echo -e \"ALL:${ip}:deny    # `date` ${geo//\"/}\" >> /etc/hosts.deny"
     $DEBUG && echo $cmd
     eval $cmd
   else
