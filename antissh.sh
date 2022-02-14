@@ -8,6 +8,13 @@ WHITELIST=''
 LOG_GEO=true
 DEBUG=false
 
+for cmd in "curl" "jq"; do
+  if [ -z "`which $cmd`" ] ; then
+    echo "Install $cmd first"
+    exit 1
+  fi
+done
+
 prelist=`cat /etc/hosts.deny | egrep -v '^\s*$' | egrep -v '^#' | cut -d":" -f 2 | xargs`
 succ_ips=`last | head -n $HEAD_COUNT |  awk '/^[^ ]+.*pts/{print $3}' | sort | uniq | xargs`
 
@@ -27,12 +34,8 @@ do
   fi
   if [[ ! " ${prelist[*]} " =~ " ${ip} " ]] ; then 
     if $LOG_GEO ; then
-      if [ -n "`which jq`" ] ; then
-        a=`curl --silent https://api.ip.sb/geoip/$ip`
-        geo="| "`echo $a | jq .country`.`echo $a | jq .region`.`echo $a | jq .city`
-      else
-        echo "Install jq first"
-      fi
+      a=`curl --silent https://api.ip.sb/geoip/$ip`
+      geo="| "`echo $a | jq .country`.`echo $a | jq .region`.`echo $a | jq .city`
     fi
     cmd="echo -e \"ALL:${ip}:deny    # `date` ${geo//\"/}\" >> /etc/hosts.deny"
     $DEBUG && echo $cmd
