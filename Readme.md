@@ -16,7 +16,7 @@ it is not adapted to centos yet, while need be configured manually.
 
 ```
 yum install -y epel-release
-yum install -y ipset incron mailx
+yum install -y ipset incron mailx jq dos2unix
 
 
 # add to cron
