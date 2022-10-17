@@ -379,7 +379,7 @@ set_incron_trust(){
     if [ $? -ne 0 ]
     then
         cat > ${INCRON_TABLE} <<-EOF
-${LOG_FILE_TRUST} IN_MODIFY flock -xn $LOCK_PATH $DOG_PATH -r -f \$@
+${LOG_FILE_TRUST} IN_MODIFY flock -xn $LOCK_PATH_TRUST $DOG_PATH -r -f \$@
 EOF
     fi
     /etc/init.d/incron restart
@@ -397,7 +397,7 @@ set_incron_threat(){
     if [ $? -ne 0 ]
     then
         cat > ${INCRON_TABLE} <<-EOF
-${LOG_FILE_THREAT} IN_MODIFY flock -xn $LOCK_PATH $DOG_PATH -r -f \$@
+${LOG_FILE_THREAT} IN_MODIFY flock -xn $LOCK_PATH_THREAT $DOG_PATH -r -f \$@
 EOF
     fi
     /etc/init.d/incron restart

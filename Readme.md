@@ -30,6 +30,8 @@ systemctl restart rsyslog.service
 
 # **Install**
 
+It is better to **modify ssh port from 22 to another**, because port 22 is monitored by default.
+
 ```bash
 sudo -E bash -c "bash <(wget -qO - https://github.com/sseaky/AntiScan/raw/master/antiscan_onekey.sh) install"
 ```
