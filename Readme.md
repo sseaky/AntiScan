@@ -10,6 +10,22 @@ Test on **Ubuntu/Debian**.
 
 
 
+## Centos
+
+it is not adapted to centos yet, while need be configured manually.
+
+```
+yum install -y epel-release
+yum install -y ipset incron mailx
+
+
+# add to cron
+*/1 * * * * /usr/bin/antiscan_dog.sh -r -f /var/log/antiscan_threat.log
+
+systemctl restart incrond.service
+systemctl restart rsyslog.service
+```
+
 
 
 # **Install**

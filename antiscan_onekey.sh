@@ -27,7 +27,8 @@ TRUST_NETWORK="127.0.0.0/8"
 THREAT_NETWORK=""
 
 LOG_DIR="/var/log"
-LOG_FILE=${LOG_DIR}/${PROJECT_NAME}.log
+LOG_FILE_TRUST=${LOG_DIR}/${PROJECT_NAME}_trust.log
+LOG_FILE_THREAT=${LOG_DIR}/${PROJECT_NAME}_threat.log
 RSYSLOG_CONFIG_DIR="/etc/rsyslog.d"
 LOGROTATE_CONFIG_DIR="/etc/logrotate.d"
 INCRON_TABLE="/var/spool/incron/root"
@@ -35,7 +36,8 @@ CRON_TABLE="/var/spool/cron/crontabs/root"
 
 DOG_URL="${GITHUB_MIRROR}/sseaky/AntiScan/raw/master/antiscan_dog.sh"
 DOG_PATH="/usr/bin/${PROJECT_NAME}_dog.sh"
-LOCK_PATH=${PROJECT_DIR}/.lock
+LOCK_PATH_TRUST=${PROJECT_DIR}/.lock_trust
+LOCK_PATH_THREAT=${PROJECT_DIR}/.lock_threat
 
 ANTISSH_URL="${GITHUB_MIRROR}/sseaky/AntiScan/raw/master/antissh.sh"
 ANTISSH_PATH="/usr/bin/antissh.sh"
@@ -137,21 +139,21 @@ get_char(){
 
 func_input_param(){
     local OPTIND
-    unset alias_name default_value question _value _input value_name
+    unset alias_name default_value question _value _input value_name list
     flag_allow_none=false
     flag_yon=false
     flag_echo=false
-    while getopts "a:d:nq:v:l:y" _opt
+    while getopts "a:d:nq:v:l:yo" _opt
     do
         case $_opt in
-            a) alias_name="$OPTARG" ;;
-            d) default_value="$OPTARG" ;;
-            l) list="$OPTARG" ;;
-            n) flag_allow_none=true ;;
-            o) flag_echo=true ;;
-            q) question="$OPTARG" ;;
-            v) value_name="$OPTARG" ;;
-            y) flag_yon=true ;;
+            a) alias_name="$OPTARG" ;;      # 变量提示信息
+            d) default_value="$OPTARG" ;;   # 默认值
+            l) list="$OPTARG" ;;            # 答案列表
+            n) flag_allow_none=true ;;      # 允许无输入
+            o) flag_echo=true ;;            # 回显结果
+            q) question="$OPTARG" ;;        # 自定义问题
+            v) value_name="$OPTARG" ;;      # 返回变量名
+            y) flag_yon=true ;;             # 是否问题
         esac
     done
 
@@ -162,7 +164,7 @@ func_input_param(){
 #        [ -z "$question" ] && question="Yes or No?"
     fi
     if [ -n "$list" ]; then
-        flag_allow_none=false
+        # flag_allow_none=false
         [ -z "$question" ] && question="Please choice ${COLOR_PINK}ID${COLOR_END} of ${alias_name}"
         [ -z "$default_value" ] && default_value=1
     fi
@@ -208,6 +210,7 @@ func_input_param(){
     echo
     eval ${value_name}=\"${_value}\"
 }
+
 
 str_repeat(){
     eval printf -- "$1%0.s" {1..$2}
@@ -287,12 +290,18 @@ prompt_param(){
 
     [ -s "$IPSET_SAVE_FILE" ] && func_input_param -v flag_ipset_restore -y -a "$TRUST_FILE is exist" -q "Restore it?" || flag_ipset_restore=false
 
+    func_input_param -v THREAT_COPE_METHOD -l "incron cron" -a "threat method" -n
+    [ "$THREAT_COPE_METHOD" = "cron" ] && func_input_param -v THREAT_CRON_INTERVAL -a "threat cron interval" -d 1 -n
+
+
+    func_input_param -v INSTALL_ANTISSH -y -a "install anti ssh module" -n -o
 #    [ -s "$TRUST_FILE" ] && func_input_param -v flag_import_trust -y -q "Import items in $TRUST_FILE?"
 #    $flag_import_trust && TRUST_NETWORK=$(sort_list $TRUST_NETWORK" "`cat "$TRUST_FILE" | awk -F "," '/^[0-9]+/{print $1}' | xargs`)
 #    [ -s "$THREAT_FILE" ] && func_input_param -v flag_import_threat -y -q "Import items in $THREAT_FILE?"
 #    $flag_import_trust && THREAT_NETWORK=$(sort_list $THREAT_NETWORK" "`cat "$THREAT_FILE" | awk -F "," '/^[0-9]+/{print $1}' | xargs`)
 
-    show_param SENSITIVE_NIS SENSITIVE_ADDRESS SENSITIVE_TCP_PORTS MAGIC_PING_LENGTH TRUST_NETWORK THREAT_NETWORK CURRENT_SSH_IP flag_ipset_restore
+    show_param SENSITIVE_NIS SENSITIVE_ADDRESS SENSITIVE_TCP_PORTS MAGIC_PING_LENGTH TRUST_NETWORK THREAT_NETWORK CURRENT_SSH_IP \
+        THREAT_COPE_METHOD THREAT_CRON_INTERVAL INSTALL_ANTISSH flag_ipset_restore 
     [ -n "$CURRENT_SSH_IP" ] && TRUST_NETWORK=`sort_list "$TRUST_NETWORK $CURRENT_SSH_IP"`
 }
 
@@ -348,43 +357,87 @@ set_rsyslog(){
     cat > ${rsyslog_config} <<-EOF
 \$template ${PROJECT_NAME}_tpl,"%timestamp:::date-unixtimestamp% %timestamp:::date-mysql% %timestamp% %msg:::drop-last-if%\n"
 
-:msg, ereregex, "${PROJECT_NAME}_(trust|threat):" ${LOG_FILE};${PROJECT_NAME}_tpl
+:msg, ereregex, "${PROJECT_NAME}_trust:" ${LOG_FILE_TRUST};${PROJECT_NAME}_tpl
+:msg, ereregex, "${PROJECT_NAME}_threat:" ${LOG_FILE_THREAT};${PROJECT_NAME}_tpl
 & ~
 
 EOF
-    touch ${LOG_FILE} && chmod 666 ${LOG_FILE}
+    touch ${LOG_FILE_TRUST} && chmod 666 ${LOG_FILE_TRUST}
+    touch ${LOG_FILE_THREAT} && chmod 666 ${LOG_FILE_THREAT}
     /etc/init.d/rsyslog restart
 }
 
-set_incron(){
-    show_process "Set incrontab"
+set_incron_trust(){
+    show_process "Set incrontab for trust"
     INCRON_ALLOW="/etc/incron.allow"
     if [ -f "$INCRON_ALLOW" ]; then
         `grep -q "^root" $INCRON_ALLOW` || (echo root >> $INCRON_ALLOW)
     fi
-
     create_parent ${INCRON_TABLE}
-    quite_exec grep "${LOG_FILE}" ${INCRON_TABLE}
+
+    quite_exec grep "${LOG_FILE_TRUST}" ${INCRON_TABLE}
     if [ $? -ne 0 ]
     then
         cat > ${INCRON_TABLE} <<-EOF
-${LOG_FILE} IN_MODIFY flock -xn $LOCK_PATH $DOG_PATH -r -f \$@
+${LOG_FILE_TRUST} IN_MODIFY flock -xn $LOCK_PATH $DOG_PATH -r -f \$@
 EOF
     fi
     /etc/init.d/incron restart
 }
 
+set_incron_threat(){
+    show_process "Set incrontab for threat"
+    INCRON_ALLOW="/etc/incron.allow"
+    if [ -f "$INCRON_ALLOW" ]; then
+        `grep -q "^root" $INCRON_ALLOW` || (echo root >> $INCRON_ALLOW)
+    fi
+    create_parent ${INCRON_TABLE}
+
+    quite_exec grep "${LOG_FILE_THREAT}" ${INCRON_TABLE}
+    if [ $? -ne 0 ]
+    then
+        cat > ${INCRON_TABLE} <<-EOF
+${LOG_FILE_THREAT} IN_MODIFY flock -xn $LOCK_PATH $DOG_PATH -r -f \$@
+EOF
+    fi
+    /etc/init.d/incron restart
+}
+
+
+# 互联网上扫描很多，对于低配机器，使用incron处理threat会加重负担，可以使用cron代替
+# 对于trust仍然保留incron
+set_cron_threat(){
+    show_process "Set crontab for threat"
+    quite_exec grep "${LOG_FILE_THREAT}" ${CRON_TABLE}
+    if [ $? -ne 0 ]
+    then
+        # cat > ${CRON_TABLE} <<-EOF
+echo "*/${THREAT_CRON_INTERVAL} * * * * $DOG_PATH -r -f ${LOG_FILE_THREAT}"
+# EOF
+    fi
+}
+
+
 set_logrotate(){
     show_process "Set logrotate"
     logrotate_config=${LOGROTATE_CONFIG_DIR}/${PROJECT_NAME}
     cat > ${logrotate_config} <<-EOF
-${LOG_FILE} {
+${LOG_FILE_THREAT} {
     weekly
     rotate 3
     missingok
     notifempty
     compress
 	copytruncate
+    create 666 root root
+}
+${LOG_FILE_TRUST} {
+    weekly
+    rotate 3
+    missingok
+    notifempty
+    compress
+    copytruncate
     create 666 root root
 }
 EOF
@@ -402,9 +455,13 @@ install_antissh(){
     show_process Install `basename $DOG_PATH`
     wget -qO $ANTISSH_PATH $ANTISSH_URL
     chmod +x $ANTISSH_PATH
-    cat > ${CRON_TABLE} <<-EOF
+    quite_exec grep "${ANTISSH_PATH}" ${CRON_TABLE}
+    if [ $? -ne 0 ]
+    then
+        cat > ${CRON_TABLE} <<-EOF
 */1 * * * * $ANTISSH_PATH
 EOF
+    fi
 }
 
 show_result(){
@@ -443,8 +500,13 @@ install(){
     set_rsyslog
     set_logrotate
     install_dog
-    set_incron
-    install_antissh
+    set_incron_trust
+    if [ "$THREAT_COPE_METHOD" = "incron" ]; then
+        set_incron_threat
+    else
+        set_cron_threat
+    fi
+    $INSTALL_ANTISSH && install_antissh
     show_process "Install $PROJECT_NAME done."
     show_tip
 }
@@ -475,6 +537,7 @@ show_usage(){
 }
 
 check_root
+
 
 case $1 in
 install|uninstall|update)

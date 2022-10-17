@@ -104,7 +104,7 @@ for(ip in threat_ips)
     if(i==1){system(": > "thfn)}
     i+=1;
     if(debug){print ip};
-    system("ipset add --exist "pn"_threat "ip" timeout "tmthreat);
+    system("/usr/sbin/ipset add --exist "pn"_threat "ip" timeout "tmthreat);
     cmd="echo "threat_objs[ip",port"]" | tr \" \" \"\\n\" | grep -v ^$ | sort -n | uniq | xargs ;";
     cmd | getline ports;
     close(cmd);
@@ -121,8 +121,8 @@ for(ip in trust_ips)
     if(i==1){system(": > "trfn)}
     i+=1;
     if(debug){print ip};
-    system("ipset add --exist "pn"_trust "ip" timeout "tmtrust);
-    system("ipset del -q "pn"_threat "ip);
+    system("/usr/sbin/ipset add --exist "pn"_trust "ip" timeout "tmtrust);
+    system("/usr/sbin/ipset del -q "pn"_threat "ip);
     dt=trust_objs[ip",datetime"];
     dt1=substr(dt,3,2)"."substr(dt,5,2)"."substr(dt,7,2)" "substr(dt,9,2)":"substr(dt,11,2)":"substr(dt,13,2);
     system("echo "ip","trust_objs[ip",count"]","dt1","trust_objs[ip",unixstamp"]",0 >> "trfn)
@@ -130,7 +130,7 @@ for(ip in trust_ips)
 if(!debug){
     system("echo "unixstamp" > "lslf);
     }
-if (change["trust"]+change["threat"] > 0){system("ipset -q save > "isf)}
+if (change["trust"]+change["threat"] > 0){system("/usr/sbin/ipset -q save > "isf)}
 if(debug){
     print "change_trust:"change["trust"]", change_threat:"change["threat"];
 }
@@ -239,9 +239,9 @@ show_usage(){
 
 remove_ip(){
     [ "$1" = "trust" ] && fn=$TRUST_FILE || fn=$THREAT_FILE
-    ipset -q del ${PROJECT_NAME}_$1 $2
+    /usr/sbin/ipset -q del ${PROJECT_NAME}_$1 $2
     [ -s "$fn" ] && sed -i "/^$2.*$/d" $fn
-    ipset -q save > $IPSET_SAVE_FILE
+    /usr/sbin/ipset -q save > $IPSET_SAVE_FILE
 }
 
 show_stat(){
