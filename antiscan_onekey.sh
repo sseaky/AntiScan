@@ -411,9 +411,9 @@ set_cron_threat(){
     quite_exec grep "${LOG_FILE_THREAT}" ${CRON_TABLE}
     if [ $? -ne 0 ]
     then
-        # cat > ${CRON_TABLE} <<-EOF
-echo "*/${THREAT_CRON_INTERVAL} * * * * $DOG_PATH -r -f ${LOG_FILE_THREAT}"
-# EOF
+        cat >> ${CRON_TABLE} <<-EOF
+*/${THREAT_CRON_INTERVAL} * * * * $DOG_PATH -r -f ${LOG_FILE_THREAT}
+EOF
     fi
 }
 
@@ -458,7 +458,7 @@ install_antissh(){
     quite_exec grep "${ANTISSH_PATH}" ${CRON_TABLE}
     if [ $? -ne 0 ]
     then
-        cat > ${CRON_TABLE} <<-EOF
+        cat >> ${CRON_TABLE} <<-EOF
 */1 * * * * $ANTISSH_PATH
 EOF
     fi
