@@ -355,11 +355,11 @@ set_rsyslog(){
     fi
 
     cat > ${rsyslog_config} <<-EOF
-\$template ${PROJECT_NAME}_tpl,"%timestamp:::date-unixtimestamp% %timestamp:::date-mysql% %timestamp% %msg:::drop-last-if%\n"
+\$template ${PROJECT_NAME}_tpl,"%timestamp:::date-unixtimestamp% %timestamp:::date-mysql% %timestamp% %msg%\n"
 
 :msg, ereregex, "${PROJECT_NAME}_trust:" ${LOG_FILE_TRUST};${PROJECT_NAME}_tpl
 :msg, ereregex, "${PROJECT_NAME}_threat:" ${LOG_FILE_THREAT};${PROJECT_NAME}_tpl
-& ~
+& stop
 
 EOF
     touch ${LOG_FILE_TRUST} && chmod 666 ${LOG_FILE_TRUST}
