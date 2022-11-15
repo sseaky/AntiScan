@@ -6,7 +6,7 @@
 # config #
 ##########
 
-VERSION=20201217
+VERSION=20221114
 
 DEBUG=false
 
@@ -34,11 +34,14 @@ INCRON_TABLE="/var/spool/incron/root"
 READ_LINE=20
 
 # 统计列表保存时长
-DETAIL_HISTORY=$(( 3600 * 24 * 7))
+DETAIL_HISTORY_DAY=7
+DETAIL_HISTORY_SEC=$(( 3600 * 24 * ${DETAIL_HISTORY_DAY} ))
 
 ## ipset超时
-TIMEOUT_THREAT=$(( 3600 * 24 * 1 ))
-TIMEOUT_TRUST=$(( 3600 * 24 * 14 ))
+TIMEOUT_THREAT_DAY=1
+TIMEOUT_THREAT_SEC=$(( 3600 * 24 * ${TIMEOUT_THREAT_DAY} ))
+TIMEOUT_TRUST_DAY=14
+TIMEOUT_TRUST_SEC=$(( 3600 * 24 * ${TIMEOUT_TRUST_DAY} ))
 
 
 ######
@@ -71,7 +74,7 @@ analyse(){
         sed -r 's/([0-9]{10,10})\s+(\S+).*antiscan_([^ :]+).*?SRC=(\S+).*?LEN=(\S+).*?PROTO=(\S+)(.*)/\1 \2 \3 \4 \5 \6 \7/g' |
         awk -v lslf=$LASTSTAMP_FILE -v ltst=$laststamp -v pn=$PROJECT_NAME \
             -v thfn=$THREAT_FILE_NEW -v trfn=$TRUST_FILE_NEW \
-            -v tmthreat=$TIMEOUT_THREAT -v tmtrust=$TIMEOUT_TRUST \
+            -v tmthreat=$TIMEOUT_THREAT_SEC -v tmtrust=$TIMEOUT_TRUST_SEC \
             -v isf=$IPSET_SAVE_FILE \
             -v debug=`$DEBUG && echo 1 || echo 0` \
 '
@@ -147,7 +150,7 @@ merge(){
     then
         [ -f "$TRUST_FILE" ] || touch $TRUST_FILE
         cat "$TRUST_FILE" "$TRUST_FILE_NEW" |
-            awk -F "," -v ns=$now_stamp -v dh=$DETAIL_HISTORY \
+            awk -F "," -v ns=$now_stamp -v dh=$DETAIL_HISTORY_SEC \
                 -v trf=$TRUST_FILE \
                 -v debug=`$DEBUG && echo 1 || echo 0` \
 '
@@ -177,7 +180,7 @@ for (ip in trust_ips)
     then
         [ -f "$THREAT_FILE" ] || touch $THREAT_FILE
         cat "$THREAT_FILE" $THREAT_FILE_NEW |
-            awk -F "," -v ns=$now_stamp -v dh=$DETAIL_HISTORY \
+            awk -F "," -v ns=$now_stamp -v dh=$DETAIL_HISTORY_SEC \
                 -v thf=$THREAT_FILE \
                 -v debug=`$DEBUG && echo 1 || echo 0` \
 '

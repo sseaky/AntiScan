@@ -15,7 +15,7 @@ GITHUB_MIRROR=${GITHUB_MIRROR:-https://github.com}
 [ -d "$PROJECT_DIR" ] || mkdir $PROJECT_DIR
 
 # 敏感网卡
-SENSITIVE_NIS="all"
+SENSITIVE_NIS="eth0"
 # 敏感外网IP
 SENSITIVE_ADDRESS="0.0.0.0/0"
 # 敏感端口
@@ -26,13 +26,18 @@ MAGIC_PING_LENGTH=${MAGIC_PING_LENGTH:-100}
 TRUST_NETWORK="127.0.0.0/8"
 THREAT_NETWORK=""
 
+# 详细日志保存天数，日志太多会消耗性能
+DETAIL_HISTORY_DAY=7
+
+grep -i 'centos' /etc/os-release >> /dev/null && OS='centos' || OS='ubuntu'
+
 LOG_DIR="/var/log"
 LOG_FILE_TRUST=${LOG_DIR}/${PROJECT_NAME}_trust.log
 LOG_FILE_THREAT=${LOG_DIR}/${PROJECT_NAME}_threat.log
 RSYSLOG_CONFIG_DIR="/etc/rsyslog.d"
 LOGROTATE_CONFIG_DIR="/etc/logrotate.d"
 INCRON_TABLE="/var/spool/incron/root"
-CRON_TABLE="/var/spool/cron/crontabs/root"
+[ "$OS" = "centos" ] && CRON_TABLE="/var/spool/cron/root" || CRON_TABLE="/var/spool/cron/crontabs/root"
 
 DOG_URL="${GITHUB_MIRROR}/sseaky/AntiScan/raw/master/antiscan_dog.sh"
 DOG_PATH="/usr/bin/${PROJECT_NAME}_dog.sh"
@@ -290,9 +295,11 @@ prompt_param(){
 
     [ -s "$IPSET_SAVE_FILE" ] && func_input_param -v flag_ipset_restore -y -a "$TRUST_FILE is exist" -q "Restore it?" || flag_ipset_restore=false
 
+    # 日志保存天数太多，会增加解析时长
+    func_input_param -v DETAIL_HISTORY_DAY -a "threat log days" -d $DETAIL_HISTORY_DAY
+    # 公网扫描太多，使用incron解析threat会消耗资源，改用cron每1分钟解析一次。trust还是使用incron
     func_input_param -v THREAT_COPE_METHOD -l "incron cron" -a "threat method" -n
     [ "$THREAT_COPE_METHOD" = "cron" ] && func_input_param -v THREAT_CRON_INTERVAL -a "threat cron interval" -d 1 -n
-
 
     func_input_param -v INSTALL_ANTISSH -y -a "install anti ssh module" -n -o
 #    [ -s "$TRUST_FILE" ] && func_input_param -v flag_import_trust -y -q "Import items in $TRUST_FILE?"
@@ -301,7 +308,7 @@ prompt_param(){
 #    $flag_import_trust && THREAT_NETWORK=$(sort_list $THREAT_NETWORK" "`cat "$THREAT_FILE" | awk -F "," '/^[0-9]+/{print $1}' | xargs`)
 
     show_param SENSITIVE_NIS SENSITIVE_ADDRESS SENSITIVE_TCP_PORTS MAGIC_PING_LENGTH TRUST_NETWORK THREAT_NETWORK CURRENT_SSH_IP \
-        THREAT_COPE_METHOD THREAT_CRON_INTERVAL INSTALL_ANTISSH flag_ipset_restore 
+        DETAIL_HISTORY_DAY THREAT_COPE_METHOD THREAT_CRON_INTERVAL INSTALL_ANTISSH flag_ipset_restore 
     [ -n "$CURRENT_SSH_IP" ] && TRUST_NETWORK=`sort_list "$TRUST_NETWORK $CURRENT_SSH_IP"`
 }
 
@@ -309,6 +316,19 @@ prompt_param(){
 ########
 # main #
 ########
+
+
+install_basic_backage(){
+    [ "$OS" = "centos" ] && yum install -y epel-release
+    [ "$OS" = "centos" ] && yum install -y ipset incrontab mailx jq dos2unix rsyslog logrotate util-linux
+    [ "$OS" = "centos" ] || apt install -y ipset incron mailutils jq dos2unix rsyslog logrotate util-linux
+    # check_package rsyslogd rsyslog
+    # check_package logrotate
+    # check_package ipset
+    # check_package incrontab incron incrontab
+    # check_package flock util-linux
+}
+
 
 set_iptables(){
     show_process Set iptables rules
@@ -364,7 +384,7 @@ set_rsyslog(){
 EOF
     touch ${LOG_FILE_TRUST} && chmod 666 ${LOG_FILE_TRUST}
     touch ${LOG_FILE_THREAT} && chmod 666 ${LOG_FILE_THREAT}
-    /etc/init.d/rsyslog restart
+    [ "$OS" = "centos" ] && systemctl restart rsyslog || /etc/init.d/rsyslog restart
 }
 
 set_incron_trust(){
@@ -382,7 +402,7 @@ set_incron_trust(){
 ${LOG_FILE_TRUST} IN_MODIFY flock -xn $LOCK_PATH_TRUST $DOG_PATH -r -f \$@
 EOF
     fi
-    /etc/init.d/incron restart
+    [ "$OS" = "centos" ] && systemctl restart incron || /etc/init.d/incron restart
 }
 
 set_incron_threat(){
@@ -449,6 +469,7 @@ install_dog(){
     wget -qO $DOG_PATH $DOG_URL
     wget -qO $PY_PATH $PY_URL
     chmod +x $DOG_PATH
+    [ -n "$DETAIL_HISTORY_DAY" ] && sed -i "s/^DETAIL_HISTORY_DAY=.*$/DETAIL_HISTORY_DAY=${DETAIL_HISTORY_DAY}/" DOG_PATH
 }
 
 install_antissh(){
@@ -489,11 +510,7 @@ show_tip(){
 }
 
 install(){
-    check_package rsyslogd rsyslog
-    check_package logrotate
-    check_package ipset
-    check_package incrontab incron
-    check_package flock util-linux
+    install_basic_backage
     prompt_param
     set_ipset
     set_iptables
