@@ -402,7 +402,7 @@ set_incron_trust(){
 ${LOG_FILE_TRUST} IN_MODIFY flock -xn $LOCK_PATH_TRUST $DOG_PATH -r -f \$@
 EOF
     fi
-    [ "$OS" = "centos" ] && systemctl restart incron || /etc/init.d/incron restart
+    [ "$OS" = "centos" ] && systemctl restart incrond.service || /etc/init.d/incron restart
 }
 
 set_incron_threat(){
@@ -469,7 +469,7 @@ install_dog(){
     wget -qO $DOG_PATH $DOG_URL
     wget -qO $PY_PATH $PY_URL
     chmod +x $DOG_PATH
-    [ -n "$DETAIL_HISTORY_DAY" ] && sed -i "s/^DETAIL_HISTORY_DAY=.*$/DETAIL_HISTORY_DAY=${DETAIL_HISTORY_DAY}/" DOG_PATH
+    [ -n "$DETAIL_HISTORY_DAY" ] && sed -i "s/^DETAIL_HISTORY_DAY=.*$/DETAIL_HISTORY_DAY=${DETAIL_HISTORY_DAY}/" $DOG_PATH
 }
 
 install_antissh(){

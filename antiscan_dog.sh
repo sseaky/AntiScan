@@ -17,7 +17,10 @@ PROJECT_DIR=${ROOT_DIR}/.${PROJECT_NAME}
 [ -d "$PROJECT_DIR" ] || mkdir $PROJECT_DIR
 
 LOG_DIR="/var/log"
-LOG_FILE=${LOG_DIR}/${PROJECT_NAME}.log
+LOG_FILE_TRUST=${LOG_DIR}/${PROJECT_NAME}_trust.log
+LOG_FILE_THREAT=${LOG_DIR}/${PROJECT_NAME}_threat.log
+LOG_FILE="${LOG_FILE_TRUST} ${LOG_FILE_THREAT}"
+
 
 LASTSTAMP_FILE=${PROJECT_DIR}/laststamp
 THREAT_FILE=${PROJECT_DIR}/threat.csv
@@ -61,7 +64,7 @@ check_root(){
 
 analyse(){
     $DEBUG && echo --function ${FUNCNAME[0]}--
-    if [ ! -s "$LOG_FILE" ]; then exit; fi
+    # if [ ! -s "$LOG_FILE" ]; then exit; fi
 
     ( $DEBUG || $FLAG_PARSE_WHOLE_LOG ) && laststamp=0 || read laststamp <<< `head -n 1 $LASTSTAMP_FILE`
 
