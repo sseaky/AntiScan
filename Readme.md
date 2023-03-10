@@ -1,6 +1,6 @@
 # About
 
-[EN](https://github.com/sseaky/AntiScan/raw/master/Readme_EN.md)
+[EN](https://github.com/sseaky/AntiScan/blob/master/Readme_EN.md)
 
 本项目是为防止暴露在公网的服务器被扫描而设计。
 
