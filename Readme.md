@@ -1,35 +1,47 @@
 # About
 
-The project will deploy a mechanism on server to anti port scanner.
+[EN](https://github.com/sseaky/AntiScan/raw/master/Readme_EN.md)
 
-The malicious scanner who try to inspect the sensitive ports of server will be logged with iptables and be added into blacklist by incron task immediately for certain time.
+本项目是为防止暴露在公网的服务器被扫描而设计。
 
-Test on **Ubuntu/Debian/Centos7**.
+只要连接了预定的敏感端口，这些源IP就会被iptables记录，并通过cron或incron任务将这些源IP加入黑名单一段时间。
+
+目前在 **Ubuntu/Debian/Centos7** 测试过，效果如下。
 
 ![install](img/test.gif)
 
 
 
-# **Install**
+# **安装**
 
-It is better to **modify ssh port from 22 to another**, because port 22 is monitored by default.
+因为程序默认是将22端口加入了敏感端口，为防止错误封堵正常的连接，所以最好将ssh的端口改到别的高端口。
+
+如果被封堵，可以用魔术Ping的方法自行解封。
+
+root用户可以不需要sudo。
 
 ```bash
 sudo -E bash -c "bash <(wget -qO - https://github.com/sseaky/AntiScan/raw/master/antiscan_onekey.sh) install"
 ```
 
-or
+或者
 
 ```bash
 wget https://github.com/sseaky/AntiScan/raw/master/antiscan_onekey.sh
 sudo -E bash antiscan_onekey.sh install
 ```
 
+安装过程如下，可以作必要调整。
+
 ![install](img/install.png)
 
-# Magic Ping
+# 魔术Ping
 
-There is a magic length to set up on installment, If user want to add current client to trust list, just send the a ICMP packet with the payload of magic length (default 100).
+基于零信任设计的思想，程序定义了一个魔术Ping值，只要用户发送指定长度的icmp包，就可以触发程序将源IP加入白名单，放通所有连接。
+
+默认值为100，部署时建议自行修改。
+
+发送指定长度的ICMP包方法如下：
 
 ##### Windows:
 
@@ -43,9 +55,9 @@ ping -l 100 x.x.x.x
 ping -s 100 x.x.x.x
 ```
 
-The length in iptable rules is **28 bytes** larger than magic ping, because it generally includes 20 bytes IP heads and 8 bytes ICMP header.
+由于20字节的IP头部和8字节的ICMP头部，所以在iptable规则中，筛选的长度会大于指定长度28字节，
 
-# Usage
+# 使用
 
 ```bash
 $ antiscan_dog.sh -h
@@ -77,11 +89,11 @@ Tips:
 
 ![install](img/show.png)
 
-If python3 is available, it can display location with -t.
+如果python3可用，可以使用-t参数显示来源，IP数据是基于离线数据。
 
 ![install](img/show_loc.png)
 
-# Update
+# 更新
 
 ```bash
 sudo -E bash -c "bash <(wget -qO - https://github.com/sseaky/AntiScan/raw/master/antiscan_onekey.sh) update"
@@ -89,7 +101,7 @@ sudo -E bash -c "bash <(wget -qO - https://github.com/sseaky/AntiScan/raw/master
 
 
 
-# Note
+# 问题
 
 ### tail: inotify resources exhausted
 
@@ -104,33 +116,47 @@ fs.inotify.max_user_instances = 1048576
 
 
 
+# 2023.3.10
+
+增加FORWARD链的封堵。对于容器映射到主机流量，INPUT链无效
+
+
+
 # 2022.1.29
 
-use antissh.sh to ban the ip of ssh brute-force
+添加了antissh.sh功能，防止对ssh的爆破
 
-install jq first to query geo info
+先安装jq
+
+```
+apt install jq
+```
+
+多次尝试ssh失败的IP，会被记录于 /etc/hosts.deny
+
+```
+ALL:206.189.xx.xx:deny # Sun Jan 30 22:14:10 CST 2022 | United Kingdom.England.London
+```
 
 
 
-add to incrontab (immediately)
+
+
+增加选择crontab和incrontab
+
+ incrontab，即时生效，但威胁日志较多时，比较消耗资源
 
 ```
 /var/log/btmp   IN_MODIFY     flock -xn /root/.antissh.lock bash /usr/bin/antissh.sh
 ```
 
-Or add to crontab (periodically)
+crontabe，周期检查，会有一定的空档期
 
 ```
 */5 * * * * /usr/bin/antissh.sh
 ```
 
 
-
-/etc/hosts.deny
-
-```
-ALL:206.189.xx.xx:deny # Sun Jan 30 22:14:10 CST 2022 | United Kingdom.England.London
-```
 
 
 

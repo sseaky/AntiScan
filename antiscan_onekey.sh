@@ -338,12 +338,14 @@ set_iptables(){
     iptables -A ${PROJECT_NAME} -p icmp -m length --length $(( $MAGIC_PING_LENGTH + 28 )) -m comment --comment "mark ${PROJECT_NAME}_trust" -j LOG --log-prefix "${PROJECT_NAME}_trust: "
     iptables -A ${PROJECT_NAME} -p tcp -m multiport --dports `tr_space2comma ${SENSITIVE_TCP_PORTS}` -m comment --comment "mark ${PROJECT_NAME}_threat" -j LOG --log-prefix "${PROJECT_NAME}_threat: "
     iptables -A ${PROJECT_NAME} -m set --match-set ${PROJECT_NAME}_threat src -m comment --comment "drop ${PROJECT_NAME} threat" -j DROP
+    iptables -I FORWARD 1 -m set --match-set ${PROJECT_NAME}_threat src -m comment --comment "drop ${PROJECT_NAME} threat" -j DROP
 
     cmd="iptables -A INPUT"
     [ -n "$iptables_option_nis" ] && cmd="$cmd $iptables_option_nis"
     [ -n "$SENSITIVE_ADDRESS" ] && cmd="$cmd -d $SENSITIVE_ADDRESS"
     cmd=$cmd" -m comment --comment go_to_${PROJECT_NAME} -j ${PROJECT_NAME} "
     `quite_exec "iptables -nvL INPUT | grep -i ${PROJECT_NAME} | grep -v grep"` ||  $cmd
+    
 }
 
 ipset_add(){
