@@ -93,7 +93,7 @@ sudo -E bash -c "bash <(wget -qO - https://github.com/sseaky/AntiScan/raw/master
 
 ### tail: inotify resources exhausted
 
-Append to /etc/sysctl.php
+Append to /etc/sysctl.conf
 
 ```
 fs.inotify.max_user_watches = 1048576
